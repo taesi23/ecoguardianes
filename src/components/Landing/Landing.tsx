@@ -108,7 +108,7 @@ const partners = [
   }
 ];
 
-export const Landing = () => {
+export const LandingEcoGuardianes = () => {
   return (
     <div className="landing-page">
       <section id="inicio" className="landing-hero">
@@ -275,71 +275,6 @@ export const Landing = () => {
           ))}
         </div>
       </section>
-
-      {/* <section id="contacto" className="section-block">
-        <div className="paper-card contact-card">
-          <div className="contact-heading">
-            <h2 className="section-title">Voluntariado</h2>
-            <p className="contact-description"> Envíanos un mensaje, contáctanos y te responderemos lo antes posible.
-            </p>
-          </div>
-
-          <form className="contact-form" onSubmit={handleContactSubmit}>
-            <label className="contact-field">
-              <span className="contact-label">Nombre completo:*</span>
-              <input
-                className="contact-input"
-                type="text"
-                name="nombreCompleto"
-                value={contactForm.nombreCompleto}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Correo electrónico:*</span>
-              <input
-                className="contact-input"
-                type="email"
-                name="correo"
-                value={contactForm.correo}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Número de teléfono:*</span>
-              <input
-                className="contact-input"
-                type="tel"
-                name="telefono"
-                value={contactForm.telefono}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Mensaje:*</span>
-              <textarea
-                className="contact-textarea"
-                name="mensaje"
-                value={contactForm.mensaje}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            {feedbackMessage && <p className="contact-feedback">{feedbackMessage}</p>}
-
-            <button className="contact-button" type="submit" disabled={isSending}>
-              {isSending ? 'Enviando...' : 'Enviar mensaje'}
-            </button>
-          </form>
-        </div>
-      </section> */}
     </div>
   );
 };

@@ -97,7 +97,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       {/* Lista de Navegación */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
 
@@ -105,7 +105,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             <Link
               key={item.name}
               to={item.path}
-              onClick={onClose} // Cierra el menú al hacer clic (útil en celular)
+              onClick={onClose}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
                 isActive 
                   ? 'bg-[#EBF3E8] text-[#2D7A3E] border border-[#2D7A3E]/20 shadow-sm' 
@@ -123,10 +123,13 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         })}
       </nav>
 
-      {/* Botón Salir */}
-      <div className="p-4 border-t border-[#4A2E18]/10">
+      {/* Botón Salir siempre visible en móvil y desktop */}
+      <div className="border-t border-[#4A2E18]/10 p-4">
         <button
-          onClick={handleLogout}
+          onClick={() => {
+            handleLogout();
+            onClose?.();
+          }}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
           <img src="/salir.svg" alt="Cerrar Sesión" className="w-5 h-5 object-contain opacity-70" />

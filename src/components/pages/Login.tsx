@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import '../Landing/Landing.css';
 
@@ -10,6 +10,7 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,8 +18,12 @@ export const Login = () => {
     setError(null);
 
     try {
+      if (!email.trim() || !password.trim()) {
+        throw new Error('Ingresa tu correo y contraseña para continuar.');
+      }
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
@@ -60,7 +65,7 @@ export const Login = () => {
 
       <div className="text-center mb-6">
         <h2 className="section-title text-4xl mb-2">Bienvenida de nuevo</h2>
-        <p className="text-[#4A2E18]/70 font-medium">Ingresa a tu cuenta de Eco Guardiana</p>
+        <p className="text-[#4A2E18]/70 font-medium">Ingresa a tu cuenta de Eco Guardian</p>
       </div>
 
       <div className="w-full max-w-md bg-[#EBF3E8] border-[2px] border-dashed border-[#2D7A3E]/30 rounded-3xl p-6 sm:p-8 relative shadow-lg">
@@ -87,14 +92,24 @@ export const Login = () => {
 
           <label className="contact-field block">
             <span className="contact-label text-[#2D7A3E]">Contraseña:</span>
-            <input
-              className="contact-input w-full mt-1 border-white focus:ring-2 focus:ring-[#2D7A3E]"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                className="contact-input w-full mt-1 border-white focus:ring-2 focus:ring-[#2D7A3E] pr-11"
+                type={mostrarPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D7A3E] hover:text-[#235E30]"
+                aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {mostrarPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </label>
 
           <div className="pt-4">

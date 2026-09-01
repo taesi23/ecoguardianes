@@ -38,6 +38,7 @@ export default function AdminUsuarios() {
   // Estados del Modal
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [formulario, setFormulario] = useState({
     nombre: '', apellido_paterno: '', correo: '', telefono: '', password: '', rol_id: '', colonia_id: '', compostero_id: ''
   });
@@ -72,8 +73,11 @@ export default function AdminUsuarios() {
         supabase.from('composteros').select('id, nombre, codigo, colonia_id').eq('activo', true).order('codigo')
       ]);
       const rolesCargadas = dataRoles || [];
-      setRoles(rolesCargadas);
-      setRolesSeleccionados(rolesCargadas.map(r => r.id));
+      const rolesPermitidas = superAdmin
+        ? rolesCargadas
+        : rolesCargadas.filter(r => ['Eco Guardian', 'Administrador'].includes(r.nombre));
+      setRoles(rolesPermitidas);
+      setRolesSeleccionados(rolesPermitidas.map(r => r.id));
       setColonias(dataColonias || []);
       setComposterosDisponibles(dataComposteros || []);
 
@@ -83,7 +87,7 @@ export default function AdminUsuarios() {
         .select('id, nombre, apellido_paterno, correo, telefono, activo, created_at, rol_id, colonia_id, compostero_id, roles(nombre), colonias(nombre), composteros(nombre, codigo)')
         .order('created_at', { ascending: false });
 
-      // Si no es Super Admin, solo ve a los de su colonia
+      // Si no es Super Admin, solo ve a los usuarios de su colonia y nunca a Super Admin
       if (!superAdmin && colId) {
         query = query.eq('colonia_id', colId);
       }
@@ -91,7 +95,20 @@ export default function AdminUsuarios() {
       const { data: dataUsuarios, error: errUsuarios } = await query;
       if (errUsuarios) throw errUsuarios;
 
-      setUsuarios(dataUsuarios as unknown as Usuario[]);
+      const usuariosVisibles = (dataUsuarios || []).filter((usuario: any) => {
+        if (superAdmin) return true;
+
+        const nombreRol = Array.isArray(usuario.roles)
+          ? usuario.roles[0]?.nombre
+          : usuario.roles?.nombre;
+
+        if (nombreRol === 'Super Admin') return false;
+        if (!colId) return false;
+
+        return usuario.colonia_id === colId;
+      });
+
+      setUsuarios(usuariosVisibles as unknown as Usuario[]);
     } catch (err: any) {
       setError('Error al cargar los datos.');
       console.error(err);
@@ -118,9 +135,14 @@ export default function AdminUsuarios() {
     return coincideBusqueda && coincideRol;
   });
 
+  const obtenerIdRolPorNombre = (...nombres: string[]) => {
+    return roles.find(r => nombres.includes(r.nombre))?.id || '';
+  };
+
   const abrirModalNuevo = () => {
     setEditandoId(null);
-    const idRolGuardiana = roles.find(r => r.nombre === 'Eco Guardiana')?.id || '';
+    const idRolGuardiana = obtenerIdRolPorNombre('Eco Guardiana', 'Eco Guardian');
+    const rolPorDefecto = idRolGuardiana || roles[0]?.id || '';
 
     setFormulario({ 
       nombre: '', 
@@ -128,7 +150,7 @@ export default function AdminUsuarios() {
       correo: '', 
       telefono: '', 
       password: '',
-      rol_id: esSuperAdmin ? '' : idRolGuardiana,
+      rol_id: rolPorDefecto,
       colonia_id: esSuperAdmin ? '' : (adminColoniaId || ''),
       compostero_id: ''
     });
@@ -164,20 +186,50 @@ export default function AdminUsuarios() {
   const guardarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
     setCargando(true);
+
     try {
       if (!editandoId) {
-        if (!formulario.password || formulario.password.length < 6) {
+        const idRolGuardiana = obtenerIdRolPorNombre('Eco Guardian');
+        const rolDefinitivo = formulario.rol_id || idRolGuardiana;
+
+        if (!rolDefinitivo) {
+          throw new Error('Selecciona un rol para el usuario. Por defecto se usa Eco Guardian.');
+        }
+
+        const datosFormulario = {
+          ...formulario,
+          rol_id: rolDefinitivo,
+        };
+
+        const faltantes: string[] = [];
+
+        if (!datosFormulario.nombre.trim()) faltantes.push('nombre');
+        if (!datosFormulario.correo.trim()) faltantes.push('correo');
+        if (!datosFormulario.rol_id) faltantes.push('rol');
+        if (esSuperAdmin && !datosFormulario.colonia_id) faltantes.push('colonia');
+        if (!datosFormulario.password.trim()) faltantes.push('contraseña');
+
+        if (faltantes.length > 0) {
+          throw new Error(`Falta información requerida: ${faltantes.join(', ')}.`);
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(datosFormulario.correo.trim())) {
+          throw new Error('El correo electrónico no tiene un formato válido.');
+        }
+
+        if (datosFormulario.password.length < 6) {
           throw new Error('La contraseña debe tener al menos 6 caracteres.');
         }
 
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
-        if (!passwordRegex.test(formulario.password)) {
+        if (!passwordRegex.test(datosFormulario.password)) {
           throw new Error('La contraseña debe incluir al menos una mayúscula y un número.');
         }
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formulario.correo,
-          password: formulario.password,
+          email: datosFormulario.correo.trim(),
+          password: datosFormulario.password,
         });
 
         if (authError) throw authError;
@@ -186,13 +238,13 @@ export default function AdminUsuarios() {
         const datos = {
           id: authData.user.id,
           auth_user_id: authData.user.id,
-          nombre: formulario.nombre,
-          apellido_paterno: formulario.apellido_paterno || null,
-          correo: formulario.correo,
-          telefono: formulario.telefono || null,
-          rol_id: formulario.rol_id || null,
-          colonia_id: esSuperAdmin ? (formulario.colonia_id || null) : adminColoniaId,
-          compostero_id: formulario.compostero_id || null
+          nombre: datosFormulario.nombre,
+          apellido_paterno: datosFormulario.apellido_paterno || null,
+          correo: datosFormulario.correo,
+          telefono: datosFormulario.telefono || null,
+          rol_id: datosFormulario.rol_id || null,
+          colonia_id: esSuperAdmin ? (datosFormulario.colonia_id || null) : adminColoniaId,
+          compostero_id: datosFormulario.compostero_id || null
         };
 
         const { error: insertError } = await supabase.from('usuarios').insert([datos]);
@@ -421,15 +473,25 @@ export default function AdminUsuarios() {
                 {!editandoId && (
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-sm font-medium text-gray-700">Contraseña de acceso *</label>
-                    <input
-                      type="password"
-                      name="password"
-                      required
-                      value={formulario.password}
-                      onChange={manejarCambio}
-                      placeholder="Ej. Eco123"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type={mostrarPassword ? 'text' : 'password'}
+                        name="password"
+                        required
+                        value={formulario.password}
+                        onChange={manejarCambio}
+                        placeholder="Ej. Eco123"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-11 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMostrarPassword((prev) => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {mostrarPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
                     <p className="mt-1 text-xs text-gray-500">Debe incluir al menos 6 caracteres, una mayúscula y un número.</p>
                   </div>
                 )}
@@ -454,7 +516,7 @@ export default function AdminUsuarios() {
                   >
                     <option value="">Seleccionar Rol</option>
                     {roles
-                      .filter(r => esSuperAdmin || r.nombre === 'Eco Guardiana')
+                      .filter(r => esSuperAdmin || ['Eco Guardian', 'Administrador'].includes(r.nombre))
                       .map(r => (
                         <option key={r.id} value={r.id}>{r.nombre}</option>
                       ))}

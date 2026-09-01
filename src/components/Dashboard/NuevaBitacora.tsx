@@ -245,7 +245,7 @@ export default function NuevaBitacora() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       const nextFiles = Array.from(e.target.files);
       const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
 
@@ -254,7 +254,18 @@ export default function NuevaBitacora() {
         current.forEach((url) => URL.revokeObjectURL(url));
         return nextPreviews;
       });
+
+      e.target.value = '';
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagenes((current) => current.filter((_, i) => i !== index));
+    setPreviewUrls((current) => {
+      const urlToRemove = current[index];
+      if (urlToRemove) URL.revokeObjectURL(urlToRemove);
+      return current.filter((_, i) => i !== index);
+    });
   };
 
   const handleInvalidSubmit = (erroresZod: unknown) => {
@@ -639,32 +650,57 @@ export default function NuevaBitacora() {
                   <input
                     type="file"
                     multiple
-                    accept="image/png, image/jpeg, image/jpg"
+                    accept="image/*"
+                    capture="environment"
                     onChange={handleImageChange}
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                   />
                   <div className="pointer-events-none flex flex-col items-center justify-center">
                     <UploadCloud className="mb-3 h-10 w-10 text-gray-400" />
                     <p className="mb-1 text-sm text-gray-600">
-                      <span className="font-semibold text-green-600">Haz clic para subir</span> o arrastra y suelta
+                      <span className="font-semibold text-green-600">Haz clic para tomar foto</span> o elegir imagen
                     </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG hasta 5MB</p>
+                    <p className="text-xs text-gray-500">Se abre la cámara del teléfono en Android/iPhone</p>
                   </div>
                 </label>
 
                 {imagenes.length > 0 && (
                   <>
-                    <p className="text-sm font-medium text-green-600">
-                      {imagenes.length} archivo(s) seleccionado(s)
-                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-green-600">
+                        {imagenes.length} archivo(s) seleccionado(s)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagenes([]);
+                          setPreviewUrls((current) => {
+                            current.forEach((url) => URL.revokeObjectURL(url));
+                            return [];
+                          });
+                        }}
+                        className="text-xs font-semibold text-red-600 underline underline-offset-2"
+                      >
+                        Eliminar todo
+                      </button>
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-3">
                       {previewUrls.map((url, index) => (
-                        <img
-                          key={`${url}-${index}`}
-                          src={url}
-                          alt={`Vista previa ${index + 1}`}
-                          className="h-20 w-20 rounded-lg object-cover border border-gray-200 shadow-sm"
-                        />
+                        <div key={`${url}-${index}`} className="relative">
+                          <img
+                            src={url}
+                            alt={`Vista previa ${index + 1}`}
+                            className="h-20 w-20 rounded-lg object-cover border border-gray-200 shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow-md"
+                            aria-label={`Eliminar imagen ${index + 1}`}
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </>

@@ -22,7 +22,9 @@ export default function AdminGuard() {
                  ? usuario.roles[0]?.nombre 
                  : (usuario?.roles as any)?.nombre;
 
-                setEsAdministrador(rolNombre === 'Administrador' || rolNombre === 'Super Admin');
+                setEsAdministrador(
+                  rolNombre === 'Administrador' || rolNombre === 'Super Admin'
+                );
             }
 
             setVerificando(false);
