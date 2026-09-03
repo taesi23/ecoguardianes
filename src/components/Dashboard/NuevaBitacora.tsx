@@ -282,23 +282,37 @@ export default function NuevaBitacora() {
         <form
           onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}
           onKeyDown={(event) => {
-            const target = event.target;
+            const elemento = event.target;
+            if (!(elemento instanceof HTMLElement)) return;
+
+            const selectorControles = 'input:not([type="file"]):not([type="hidden"]), select, textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]';
+            const target = elemento.closest<HTMLElement>(selectorControles);
             const esControlSecuencial = target instanceof HTMLInputElement
-              || target instanceof HTMLSelectElement;
+              || target instanceof HTMLSelectElement
+              || target?.matches('textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]');
 
             if (event.key === 'Enter' && esControlSecuencial) {
               event.preventDefault();
 
               const formulario = event.currentTarget;
               const controles = Array.from(
-                formulario.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-                  'input:not([type="file"]):not([type="hidden"]), select, textarea'
+                formulario.querySelectorAll<HTMLElement>(
+                  selectorControles
                 )
-              ).filter((control) => !control.disabled && control.getClientRects().length > 0);
-              const indiceActual = controles.indexOf(target);
+              ).filter((control) => {
+                const deshabilitado = control instanceof HTMLInputElement
+                  || control instanceof HTMLSelectElement
+                  || control instanceof HTMLTextAreaElement
+                  || control instanceof HTMLButtonElement
+                    ? control.disabled
+                    : control.getAttribute('aria-disabled') === 'true';
+
+                return !deshabilitado && control.getClientRects().length > 0;
+              });
+              const indiceActual = target ? controles.indexOf(target) : -1;
               const siguienteControl = controles[indiceActual + 1];
 
-              if (target instanceof HTMLInputElement && (target.type === 'checkbox' || target.type === 'radio')) {
+              if (target?.matches('[data-slot="checkbox"], [data-slot="radio-group-item"]')) {
                 target.click();
               }
 
