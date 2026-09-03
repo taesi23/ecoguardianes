@@ -265,6 +265,31 @@ export default function NuevaBitacora() {
     toast.error("El formulario está incompleto o tiene errores. Revisa los mensajes en rojo debajo de cada campo.");
   };
 
+  const avanzarAlSiguienteControl = (formulario: HTMLFormElement, actual: HTMLElement) => {
+    const selectorControles = 'input:not([type="file"]):not([type="hidden"]), select, textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]';
+    const controles = Array.from(formulario.querySelectorAll<HTMLElement>(selectorControles))
+      .filter((control) => {
+        const deshabilitado = control instanceof HTMLInputElement
+          || control instanceof HTMLSelectElement
+          || control instanceof HTMLTextAreaElement
+          || control instanceof HTMLButtonElement
+            ? control.disabled
+            : control.getAttribute('aria-disabled') === 'true';
+
+        return !deshabilitado && control.getClientRects().length > 0;
+      });
+    const siguienteControl = controles[controles.indexOf(actual) + 1];
+
+    if (actual.matches('[data-slot="checkbox"], [data-slot="radio-group-item"]')) {
+      actual.click();
+    }
+
+    if (siguienteControl) {
+      siguienteControl.focus({ preventScroll: true });
+      siguienteControl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-6">
@@ -281,6 +306,16 @@ export default function NuevaBitacora() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}
+          onSubmitCapture={(event) => {
+            const actual = document.activeElement;
+            const esInput = actual instanceof HTMLInputElement
+              && !['file', 'hidden', 'submit', 'button'].includes(actual.type);
+
+            if (esInput && event.nativeEvent.submitter === null) {
+              event.preventDefault();
+              avanzarAlSiguienteControl(event.currentTarget, actual);
+            }
+          }}
           onKeyDown={(event) => {
             const elemento = event.target;
             if (!(elemento instanceof HTMLElement)) return;
@@ -294,32 +329,7 @@ export default function NuevaBitacora() {
             if (event.key === 'Enter' && esControlSecuencial) {
               event.preventDefault();
 
-              const formulario = event.currentTarget;
-              const controles = Array.from(
-                formulario.querySelectorAll<HTMLElement>(
-                  selectorControles
-                )
-              ).filter((control) => {
-                const deshabilitado = control instanceof HTMLInputElement
-                  || control instanceof HTMLSelectElement
-                  || control instanceof HTMLTextAreaElement
-                  || control instanceof HTMLButtonElement
-                    ? control.disabled
-                    : control.getAttribute('aria-disabled') === 'true';
-
-                return !deshabilitado && control.getClientRects().length > 0;
-              });
-              const indiceActual = target ? controles.indexOf(target) : -1;
-              const siguienteControl = controles[indiceActual + 1];
-
-              if (target?.matches('[data-slot="checkbox"], [data-slot="radio-group-item"]')) {
-                target.click();
-              }
-
-              if (siguienteControl) {
-                siguienteControl.focus({ preventScroll: true });
-                siguienteControl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
+              if (target) avanzarAlSiguienteControl(event.currentTarget, target);
             }
           }}
           className="space-y-6"
