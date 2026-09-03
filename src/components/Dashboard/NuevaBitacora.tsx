@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,20 +31,6 @@ const faunaOptions = [
   { id: "hongos", label: "Hongos o micelio blanco" },
 ] as const;
 
-// // Esquema de validación con Zod corregido (sin required_error)
-// const bitacoraSchema = z.object({
-//   compostero_id: z.string().min(1, "Selecciona un compostero"),
-//   cantidad_material: z.coerce.number().min(0.1, "La cantidad debe ser mayor a 0"),
-//   tipo_residuo: z.string().min(2, "Describe el tipo de residuo"),
-//   temperatura: z.enum(["fria", "tibia", "caliente"]),
-//   humedad: z.enum(["seco", "optimo", "excesivo"]),
-//   olor: z.enum(["bosque", "amoniaco", "sin_olor"]),
-//   fauna: z.array(z.string()).default([]),
-//   observaciones: z.string().optional(),
-//   propuesta_mejora: z.string().optional(),
-//   plagas: z.boolean().default(false),
-//   lixiviados: z.boolean().default(false),
-// });
 const bitacoraSchema = z.object({
   compostero_id: z.string().min(1, "Selecciona un compostero"),
   cantidad_material: z.coerce.number().min(0.1, "La cantidad debe ser mayor a 0"),
@@ -65,6 +51,7 @@ type BitacoraFormValues = z.infer<typeof bitacoraSchema>;
 export default function NuevaBitacora() {
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const previewUrlsRef = useRef<string[]>([]);
   const [isGuardando, setIsGuardando] = useState(false);
   const [listaComposteros, setListaComposteros] = useState<{ id: string; nombre: string; codigo: string }[]>([]);
 
@@ -103,10 +90,15 @@ export default function NuevaBitacora() {
 
     void cargarComposterosPermitidos();
 
-    return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
+  }, []);
+
+  useEffect(() => {
+    previewUrlsRef.current = previewUrls;
   }, [previewUrls]);
+
+  useEffect(() => () => {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   // Inicializar formulario
   const form = useForm({
@@ -233,7 +225,10 @@ export default function NuevaBitacora() {
       // Limpiamos la pantalla y subimos  al inicio 
       form.reset();
       setImagenes([]);
-      setPreviewUrls([]);
+      setPreviewUrls((current) => {
+        current.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' }); // <-- Animación para subir
 
     } catch (error: any) {
@@ -249,11 +244,8 @@ export default function NuevaBitacora() {
       const nextFiles = Array.from(e.target.files);
       const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
 
-      setImagenes(nextFiles);
-      setPreviewUrls((current) => {
-        current.forEach((url) => URL.revokeObjectURL(url));
-        return nextPreviews;
-      });
+      setImagenes((current) => [...current, ...nextFiles]);
+      setPreviewUrls((current) => [...current, ...nextPreviews]);
 
       e.target.value = '';
     }
@@ -290,7 +282,11 @@ export default function NuevaBitacora() {
         <form
           onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+            const target = event.target;
+            const esControlSecuencial = target instanceof HTMLInputElement
+              || target instanceof HTMLSelectElement;
+
+            if (event.key === 'Enter' && esControlSecuencial) {
               event.preventDefault();
 
               const formulario = event.currentTarget;
@@ -298,11 +294,18 @@ export default function NuevaBitacora() {
                 formulario.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
                   'input:not([type="file"]):not([type="hidden"]), select, textarea'
                 )
-              );
-              const indiceActual = controles.indexOf(event.target);
+              ).filter((control) => !control.disabled && control.getClientRects().length > 0);
+              const indiceActual = controles.indexOf(target);
               const siguienteControl = controles[indiceActual + 1];
 
-              siguienteControl?.focus();
+              if (target instanceof HTMLInputElement && (target.type === 'checkbox' || target.type === 'radio')) {
+                target.click();
+              }
+
+              if (siguienteControl) {
+                siguienteControl.focus({ preventScroll: true });
+                siguienteControl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
             }
           }}
           className="space-y-6"
@@ -345,37 +348,7 @@ export default function NuevaBitacora() {
             <CardHeader>
               <CardTitle>1. Registro de Aportes</CardTitle>
             </CardHeader>
-            {/* <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="cantidad_material"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cantidad Aprox. (Kg o L)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="Ej. 2.5" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-
-
-              <FormField
-                control={form.control}
-                name="tipo_residuo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Residuos</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej. Restos de fruta, café, hojas secas..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-
+      
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <div className="grid grid-cols-2 gap-4">
