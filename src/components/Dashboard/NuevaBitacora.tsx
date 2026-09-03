@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangle, UploadCloud } from 'lucide-react';
+import { AlertTriangle, Camera, UploadCloud } from 'lucide-react';
 import { supabase } from '@/lib/supabase'; // <-- Agrega esta línea en tus imports
 import toast from 'react-hot-toast';
 
@@ -200,31 +200,31 @@ export default function NuevaBitacora() {
       if (imagenes.length > 0 && visitaInsertada) {
         for (const file of imagenes) {
           const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
           
           // Subimos el archivo al bucket "fotografias"
           const { error: uploadError } = await supabase.storage
             .from('fotografias')
             .upload(fileName, file);
 
-          if (!uploadError) {
-            // Generar URL pública
-            const { data: publicUrlData } = supabase.storage
-              .from('fotografias')
-              .getPublicUrl(fileName);
+          if (uploadError) throw uploadError;
 
-            // Registrar en la tabla EVIDENCIAS
-            await supabase.from('evidencias').insert({
-              visita_id: visitaInsertada.id,
-              usuario_id: usuarioData.id,
-              tipo_evidencia: 'foto',
-              ruta_storage: fileName,
-              url_publica: publicUrlData.publicUrl,
-              nombre_archivo: file.name,
-              tipo_mime: file.type,
-              tamano_bytes: file.size
-            });
-          }
+          const { data: publicUrlData } = supabase.storage
+            .from('fotografias')
+            .getPublicUrl(fileName);
+
+          const { error: errorEvidencia } = await supabase.from('evidencias').insert({
+            visita_id: visitaInsertada.id,
+            usuario_id: usuarioData.id,
+            tipo_evidencia: 'foto',
+            ruta_storage: fileName,
+            url_publica: publicUrlData.publicUrl,
+            nombre_archivo: file.name,
+            tipo_mime: file.type,
+            tamano_bytes: file.size
+          });
+
+          if (errorEvidencia) throw errorEvidencia;
         }
       }
 
@@ -287,7 +287,26 @@ export default function NuevaBitacora() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+              event.preventDefault();
+
+              const formulario = event.currentTarget;
+              const controles = Array.from(
+                formulario.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+                  'input:not([type="file"]):not([type="hidden"]), select, textarea'
+                )
+              );
+              const indiceActual = controles.indexOf(event.target);
+              const siguienteControl = controles[indiceActual + 1];
+
+              siguienteControl?.focus();
+            }
+          }}
+          className="space-y-6"
+        >
           
           <Card>
             <CardHeader>
@@ -646,23 +665,36 @@ export default function NuevaBitacora() {
                   {/* Subida de Imágenes */}
               <div className="space-y-3">
                 <FormLabel className="font-bold text-[#4A2E18]">Fotografías de Evidencia <span className="text-red-600">(Obligatorio)*</span></FormLabel>
-                <label className="relative block cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 text-center transition hover:bg-gray-50">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleImageChange}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                  <div className="pointer-events-none flex flex-col items-center justify-center">
-                    <UploadCloud className="mb-3 h-10 w-10 text-gray-400" />
-                    <p className="mb-1 text-sm text-gray-600">
-                      <span className="font-semibold text-green-600">Haz clic para tomar foto</span> 
-                    </p>
-                    <p className="text-xs text-gray-500">Se abre la cámara del teléfono.</p>
-                  </div>
-                </label>
+                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-5">
+                      <div className="pointer-events-none mb-4 flex flex-col items-center justify-center text-center">
+                        <UploadCloud className="mb-2 h-9 w-9 text-gray-400" />
+                        <p className="text-sm text-gray-600">Agrega una o más fotografías de evidencia.</p>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <label className="flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-green-700">
+                          <Camera className="h-5 w-5" aria-hidden="true" />
+                          Capturar foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleImageChange}
+                            className="sr-only"
+                          />
+                        </label>
+                        <label className="flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-green-600 px-4 py-3 text-center text-sm font-bold text-green-700 transition hover:bg-green-50">
+                          <UploadCloud className="h-5 w-5" aria-hidden="true" />
+                          Adjuntar foto
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="sr-only"
+                          />
+                        </label>
+                      </div>
+                    </div>
 
                 {imagenes.length > 0 && (
                   <>
