@@ -30,6 +30,7 @@ import AdminColonias from './components/Admin/AdminColonias';
 import AdminHistorial from './components/Admin/AdminHistorial';
 import AdminReportes from './components/Admin/AdminReportes';
 import AdminConvocatorias from './components/Admin/AdminConvocatorias';
+import ScrollToTop from './components/ScrollToTop';
 
 // 1. Plantilla para las páginas públicas (Mantiene el Header y Footer)
 const PublicLayout = () => {
@@ -47,6 +48,7 @@ const PublicLayout = () => {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster position="top-right" />
       <Routes>
         
