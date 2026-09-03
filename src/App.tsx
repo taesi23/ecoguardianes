@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Header } from './components/Header/Header';
-import { LandingEcoGuardianes } from './components/Landing/Landing';
-import LandingFDMA from './components/Landing/LandingFDMA';
+import { Landing } from './components/Landing/Landing';
+import { LandingFDMA } from './components/Landing/LandingFDMA';
 import { Footer } from './components/Footer/Footer';
 import { Informacion } from './components/pages/Informacion';
 
@@ -53,7 +53,7 @@ export default function App() {
         {/* === RUTAS PÚBLICAS === */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingFDMA />} />
-          <Route path="/ecoguardianes" element={<LandingEcoGuardianes />} />
+          <Route path="/ecoguardianes" element={<Landing />} />
           <Route path="/info" element={<Informacion />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
@@ -90,9 +90,9 @@ export default function App() {
             <Route path="composteros" element={<AdminComposteros />} />
             <Route path="usuarios" element={<AdminUsuarios />} />
             <Route path="colonias" element={<AdminColonias />} />
-            <Route path="convocatorias" element={<AdminConvocatorias />} />
             <Route path="historial" element={<AdminHistorial />} />
             <Route path="reportes" element={<AdminReportes />} />
+            <Route path="convocatorias" element={<AdminConvocatorias />} />
             <Route path="Nueva-Bitacora" element={<NuevaBitacora />} />
             <Route path="perfil" element={<Perfil />} />
           </Route>

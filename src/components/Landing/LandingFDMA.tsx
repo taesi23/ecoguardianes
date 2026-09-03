@@ -1,4 +1,5 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 const partners = [
   {
@@ -44,14 +45,42 @@ const partners = [
     avatar: '/aliados/edgara_castillo.jpg',
   }
 ]; 
+
+interface Convocatoria {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  imagen_url: string;
+  enlace_url?: string;
+}
+
 export const LandingFDMA = () => {
+  const [convocatorias, setConvocatorias] = useState<Convocatoria[]>([]);
+  const [cargandoConvocatorias, setCargandoConvocatorias] = useState(true);
+
+  useEffect(() => {
+    const cargarConvocatorias = async () => {
+      const { data, error } = await supabase
+        .from('convocatorias')
+        .select('id, titulo, descripcion, imagen_url, enlace_url')
+        .eq('activo', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (!error) setConvocatorias((data || []) as Convocatoria[]);
+      setCargandoConvocatorias(false);
+    };
+
+    cargarConvocatorias();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#fcfaf2] font-sans">
       
   
       {/* Sección Hero con Degradado de Color (Adiós espacio en blanco) */}
 
-      <section className="w-full pt-7 pb-20 px-6 flex flex-col items-center text-center bg-gradient-to-b from-[#d8ece1] to-[#fcfaf2]">
+      <section className="w-full px-6 pb-8 pt-7 text-center bg-gradient-to-b from-[#d8ece1] to-[#fcfaf2] flex flex-col items-center">
          <img
             src="/logo_fdma.svg"
             alt="Logo Festival del Medio Ambiente"
@@ -59,14 +88,36 @@ export const LandingFDMA = () => {
           />
 
         <h1 className="text-5xl md:text-7xl font-extrabold text-[#4a3728] tracking-tight leading-tight mb-6">
-          Bienvenido al <br />
-          <span className="text-[#2d6a4f]">Festival del Medio Ambiente</span>
+          Bienvenido a FDMA <br />
+          <span className="text-[#2d6a4f]">Festival Del Medio Ambiente </span>
         </h1>
         <p className="text-lg md:text-xl text-gray-700 font-medium mb-10 max-w-2xl mx-auto">
-          Un espacio para conectar, aprender y actuar por nuestro planeta. 
-          Descubre nuestras iniciativas, únete a la comunidad y sé parte del cambio.
+          Un espacio dedicado a la educación y la acción ambiental. <br />
+          Conoce nuestros proyectos activos, intégrate a nuestra red y sé parte del impacto positivo.
+          Entérate de nuestros próximos eventos en redes sociales.
         </p><br />
 
+         <div className="flex items-center gap-2 sm:ml-1">
+          <a
+            href="https://www.facebook.com/profile.php?id=100091930835447"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Facebook de FDMA"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[#4a3728]/10 bg-white p-2.5 shadow-sm transition hover:bg-blue-50"
+          >
+            <img src="/fb-icon.svg" alt="Facebook" className="h-full w-full object-contain" />
+          </a>
+          <a
+            href="https://instagram.com/fdma.mx"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram de FDMA"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[#4a3728]/10 bg-white p-2.5 shadow-sm transition hover:bg-pink-50"
+          >
+            <img src="/ig-icon.svg" alt="Instagram" className="h-full w-full object-contain" />
+          </a>
+        </div>
+ <br />
         {/* Botones de Acción (Eco Guardianes) */}
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <a 
@@ -82,34 +133,57 @@ export const LandingFDMA = () => {
             Crear Cuenta en Eco Guardianes
           </a>
 
-        </div>
-<br></br>
-        <div className="flex items-center gap-2 sm:ml-1">
-  <a
-    href="https://www.facebook.com/profile.php?id=100091930835447"
-    target="_blank"
-    rel="noreferrer"
-    aria-label="Facebook de FDMA"
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-[#4a3728]/10 bg-white p-2.5 shadow-sm transition hover:bg-blue-50"
-  >
-    <img src="/fb-icon.svg" alt="Facebook" className="h-full w-full object-contain" />
-  </a>
-  <a
-    href="https://instagram.com/fdma.mx"
-    target="_blank"
-    rel="noreferrer"
-    aria-label="Instagram de FDMA"
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-[#4a3728]/10 bg-white p-2.5 shadow-sm transition hover:bg-pink-50"
-  >
-    <img src="/ig-icon.svg" alt="Instagram" className="h-full w-full object-contain" />
-  </a>
-</div>
+        </div>  
       </section>
-
-      {/* Sección Imageboard (100% visible, sin filtros grises) */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-8 py-8">
+                  <section className="mx-auto mt-0 w-full max-w-7xl px-4 pt-6 sm:px-8">
+                  <h3 className="mb-8 text-center text-2xl font-bold text-[#4a3728] md:text-3xl">Convocatorias</h3>
+                  
+                  {cargandoConvocatorias ? (
+                    <p className="text-center text-[#4a3728]/70">Cargando convocatorias...</p>
+                  ) : convocatorias.length === 0 ? (
+                    <p className="text-center text-[#4a3728]/70">Próximamente habrá nuevas convocatorias.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                      {convocatorias.map((convocatoria) => (
+                        <article 
+                          key={convocatoria.id} 
+                          className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-[#4a3728]/10"
+                        >
+                          {/* Contenedor tipo Instagram (1:1) con fondo sutil para evitar espacios blancos vacíos */}
+                          <div className="flex w-full items-center justify-center bg-[#f8f5f2] aspect-square">
+                            <img 
+                              src={convocatoria.imagen_url} 
+                              alt={convocatoria.titulo} 
+                              className="h-full w-full object-contain" 
+                            />
+                          </div>
+                          
+                          <div className="flex flex-grow flex-col p-5">
+                            <h3 className="mb-2 text-xl font-bold text-[#4a3728]">{convocatoria.titulo}</h3>
+                            <p className="mb-5 text-base leading-relaxed text-[#4a3728]/75">
+                              {convocatoria.descripcion}
+                            </p>
+                            
+                            {/* Botón de enlace condicional alineado siempre al fondo de la tarjeta */}
+                            {convocatoria.enlace_url && (
+                              <a 
+                                href={convocatoria.enlace_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="mt-auto block w-full rounded-xl bg-green-600 px-4 py-2.5 text-center text-sm font-bold text-white transition hover:bg-green-700 shadow-sm"
+                              >
+                                Más información / Registro
+                              </a>
+                            )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                  </section>
+                   <section className="w-full max-w-7xl mx-auto px-4 sm:px-8 py-8">
         <h3 className="text-center text-2xl md:text-3xl font-bold text-[#4a3728] mb-8">
-          Comunidad en Acción
+          Comunidad FDMA en Acción
         </h3>
         
         {/* Contenedor limpio para las fotos */}
@@ -122,34 +196,34 @@ export const LandingFDMA = () => {
             loading="lazy"
           ></iframe>
         </div>
-      </section>
+                  </section>
 
-         {/* SECCIÓN ALIADOS Y COMUNIDAD (Auto-carrusel tipo Marquee idéntico a Eco Guardianes) */}
-      <section className="w-full bg-[#2d6a4f] py-12 overflow-hidden">
-         <div className="impact-inner">
-          <div className="impact-header">
-            <p className="impact-kicker">Aliados de la comunidad</p>
-            <h2 className="impact-title"> FMDA</h2>
-          </div>
-          </div>
+                  {/* SECCIÓN ALIADOS Y COMUNIDAD (Auto-carrusel tipo Marquee idéntico a Eco Guardianes) */}
+                <section className="w-full bg-[#2d6a4f] py-12 overflow-hidden">
+                  <div className="impact-inner">
+                    <div className="impact-header">
+                      <p className="impact-kicker">Aliados de la comunidad</p>
+                      <h2 className="impact-title"> FMDA</h2>
+                    </div>
+                    </div>
 
-        <div className="partner-marquee overflow-hidden w-full relative">
-          <div className="partner-track flex gap-4 w-max animate-[marquee_25s_linear_infinite]">
-            {[...partners, ...partners].map((partner, idx) => (
-              <a
-                key={`${partner.name}-${idx}`}
-                href={partner.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2.5 rounded-full bg-white/10 border border-white/20 px-4 py-2 text-white transition hover:bg-white/20 backdrop-blur-sm"
-              >
-                <img src={partner.avatar} alt={partner.name} className="h-7 w-7 rounded-full object-cover bg-white" />
-                <span className="font-semibold text-sm">{partner.handle}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
+                  <div className="partner-marquee overflow-hidden w-full relative">
+                    <div className="partner-track flex gap-4 w-max animate-[marquee_25s_linear_infinite]">
+                      {[...partners, ...partners].map((partner, idx) => (
+                        <a
+                          key={`${partner.name}-${idx}`}
+                          href={partner.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2.5 rounded-full bg-white/10 border border-white/20 px-4 py-2 text-white transition hover:bg-white/20 backdrop-blur-sm"
+                        >
+                          <img src={partner.avatar} alt={partner.name} className="h-7 w-7 rounded-full object-cover bg-white" />
+                          <span className="font-semibold text-sm">{partner.handle}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </section>
 
 
       {/* Sección de Novedades (Carrusel de Instagram) */}

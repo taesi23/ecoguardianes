@@ -24,7 +24,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           .eq('auth_user_id', user.id)
           .single();
 
-        const roles: any = usuario?.roles;
+        const roles = usuario?.roles as { nombre?: string } | { nombre?: string }[] | null;
         const rol = Array.isArray(roles)
           ? roles[0]?.nombre
           : roles?.nombre;
@@ -54,7 +54,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const menuAdmin = [
     { name: 'Inicio', path: '/admin', icon: '/inicio.svg' },
-    { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/comunidad.svg' },
+    { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/reporte.svg' },
     { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/admin/historial', icon: '/historial.svg' },
     { name: 'Composteros', path: '/admin/composteros', icon: '/compostero.svg' },
@@ -67,7 +67,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const menuItems = isAdmin
     ? isSuperAdmin
-      ? [menuAdmin[0], menuAdmin[1], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(2)]
+      ? [menuAdmin[0], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(1)]
       : menuAdmin
     : menuGuardiana;
 
@@ -98,7 +98,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       {/* Lista de Navegación */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
 
@@ -106,7 +106,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             <Link
               key={item.name}
               to={item.path}
-              onClick={onClose}
+              onClick={onClose} // Cierra el menú al hacer clic (útil en celular)
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
                 isActive 
                   ? 'bg-[#EBF3E8] text-[#2D7A3E] border border-[#2D7A3E]/20 shadow-sm' 
@@ -124,13 +124,10 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         })}
       </nav>
 
-      {/* Botón Salir siempre visible en móvil y desktop */}
-      <div className="border-t border-[#4A2E18]/10 p-4">
+      {/* Botón Salir */}
+      <div className="p-4 border-t border-[#4A2E18]/10">
         <button
-          onClick={() => {
-            handleLogout();
-            onClose?.();
-          }}
+          onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
           <img src="/salir.svg" alt="Cerrar Sesión" className="w-5 h-5 object-contain opacity-70" />

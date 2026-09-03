@@ -7,7 +7,6 @@ import compostero1 from '../../stickers/compostero-1.svg';
 import manzanaComida from '../../stickers/manzana-comida.svg';
 import maceta from '../../stickers/maceta.svg';
 import gusano from '../../stickers/gusano-2.svg'; 
-import { Convocatorias } from './Convocatorias';
 
 const whyCards = [
   {
@@ -109,7 +108,7 @@ const partners = [
   }
 ];
 
-export const LandingEcoGuardianes = () => {
+export const Landing = () => {
   return (
     <div className="landing-page">
       <section id="inicio" className="landing-hero">
@@ -156,8 +155,6 @@ export const LandingEcoGuardianes = () => {
         </div>
       </section>
 
-      <Convocatorias />
-
       <section id="Ecoguardianes" className="section-block">
         <div className="section-header">
           <h2 className="section-title">¿Qué es Eco Guardianes?</h2>
@@ -177,6 +174,7 @@ export const LandingEcoGuardianes = () => {
         </div>
       </section>
 
+    
       <section id="compostero" className="section-block">
         <div className="section-header section-header--compact">
           <h2 className="section-title">Composteros</h2>
@@ -277,7 +275,7 @@ export const LandingEcoGuardianes = () => {
             </article>
           ))}
         </div>
-      </section>
-    </div>
+      </section>  
+  </div>
   );
 };
