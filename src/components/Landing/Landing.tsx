@@ -113,17 +113,12 @@ export const Landing = () => {
     <div className="landing-page">
       <section id="inicio" className="landing-hero">
         <div className="hero-copy">
-          
-
           <h1 className="landing-title">
-            Transformamos
-            <span className="hero-highlight">residuos en vida,</span>
-            juntos. <span className="hero-heart">-</span>
-          </h1>
-
-          <p className="hero-description">
-            Monitoreando hoy el compostero que transforma el mañana.
-          </p>
+          Unidos para transformar <span className="hero-highlight">residuos en vida.</span> <span className="hero-heart">🌱</span>
+        </h1>
+         <p className="hero-description">
+             Monitoreando hoy el compostero que transforma el mañana.
+        </p>
 
           <div className="hero-actions">
             <Link to="/login" className="hero-primary">
@@ -255,8 +250,7 @@ export const Landing = () => {
           </div>
         </div>
       </section>
-
-      <section id="comunidad" className="section-block">
+      {/* <section id="comunidad" className="section-block">
         <h2 className="section-title section-title--center">Historias que inspiran</h2>
         <br />
 
@@ -275,7 +269,7 @@ export const Landing = () => {
             </article>
           ))}
         </div>
-      </section>  
+      </section>   */}
   </div>
   );
 };
