@@ -85,7 +85,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   }
 
   return (
-    <aside className="w-64 bg-[#FFF8DF] border-r border-[#4A2E18]/10 h-screen flex flex-col">
+    <aside className="sticky top-0 h-screen w-64 bg-[#FFF8DF] border-r border-[#4A2E18]/10 flex flex-col">
       
       {/* Cabecera del Sidebar */}
       <div className="p-6 flex items-center justify-between border-b border-[#4A2E18]/10">

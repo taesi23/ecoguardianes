@@ -31,7 +31,7 @@ export const DashboardLayout = () => {
       )}
 
       {/* Contenedor Principal Central */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="min-h-screen flex-1 flex flex-col">
         
         {/* Barra superior móvil */}
         <header className="md:hidden bg-[#FFF8DF] border-b border-[#4A2E18]/10 p-4 flex justify-between items-center z-40 relative shadow-sm">
@@ -50,7 +50,7 @@ export const DashboardLayout = () => {
         </header>
 
         {/* Área donde cargan las páginas (con padding más amigable para celular) */}
-        <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
+        <div className="flex-1 p-4 sm:p-6 md:p-8">
           <Outlet /> 
         </div>
 
