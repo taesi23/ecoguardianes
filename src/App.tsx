@@ -29,6 +29,7 @@ import AdminUsuarios from './components/Admin/AdminUsuarios';
 import AdminColonias from './components/Admin/AdminColonias';
 import AdminHistorial from './components/Admin/AdminHistorial';
 import AdminReportes from './components/Admin/AdminReportes';
+import AdminConvocatorias from './components/Admin/AdminConvocatorias';
 
 // 1. Plantilla para las páginas públicas (Mantiene el Header y Footer)
 const PublicLayout = () => {
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="composteros" element={<AdminComposteros />} />
             <Route path="usuarios" element={<AdminUsuarios />} />
             <Route path="colonias" element={<AdminColonias />} />
+            <Route path="convocatorias" element={<AdminConvocatorias />} />
             <Route path="historial" element={<AdminHistorial />} />
             <Route path="reportes" element={<AdminReportes />} />
             <Route path="Nueva-Bitacora" element={<NuevaBitacora />} />

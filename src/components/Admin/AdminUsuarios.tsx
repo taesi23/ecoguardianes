@@ -452,7 +452,7 @@ export default function AdminUsuarios() {
       {/* Modal */}
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
             <div className="border-b px-6 py-4"><h2 className="text-xl font-bold text-gray-800">{editandoId ? 'Editar Usuario' : 'Nuevo Usuario'}</h2></div>
             <form onSubmit={guardarUsuario} className="p-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
