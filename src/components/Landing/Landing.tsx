@@ -7,6 +7,7 @@ import compostero1 from '../../stickers/compostero-1.svg';
 import manzanaComida from '../../stickers/manzana-comida.svg';
 import maceta from '../../stickers/maceta.svg';
 import gusano from '../../stickers/gusano-2.svg'; 
+import { Convocatorias } from './Convocatorias';
 
 const whyCards = [
   {
@@ -154,6 +155,8 @@ export const Landing = () => {
           </div>
         </div>
       </section>
+
+      <Convocatorias />
 
       <section id="Ecoguardianes" className="section-block">
         <div className="section-header">

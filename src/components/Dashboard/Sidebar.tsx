@@ -54,6 +54,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const menuAdmin = [
     { name: 'Inicio', path: '/admin', icon: '/inicio.svg' },
+    { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/comunidad.svg' },
     { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/admin/historial', icon: '/historial.svg' },
     { name: 'Composteros', path: '/admin/composteros', icon: '/compostero.svg' },
@@ -66,7 +67,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const menuItems = isAdmin
     ? isSuperAdmin
-      ? [menuAdmin[0], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(1)]
+      ? [menuAdmin[0], menuAdmin[1], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(2)]
       : menuAdmin
     : menuGuardiana;
 
