@@ -46,28 +46,33 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
   const menuGuardiana = [
     { name: 'Inicio', path: '/dashboard', icon: '/inicio.svg' },
-    { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
+    { name: 'Registrar Visita', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/dashboard/Mi-Historial', icon: '/historial.svg' },
     { name: 'Comunidad', path: '/dashboard/Comunidad', icon: '/comunidad.svg' },
     { name: 'Mi Perfil', path: '/dashboard/Perfil', icon: '/usuarios.svg' },
+    { name: 'Cerrar Sesión', path: '/login', icon: '/salir.svg' },
   ];
 
   const menuAdmin = [
     { name: 'Inicio', path: '/admin', icon: '/inicio.svg' },
-    { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/reporte.svg' },
-    { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
+    { name: 'Registrar Visita', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/admin/historial', icon: '/historial.svg' },
     { name: 'Composteros', path: '/admin/composteros', icon: '/compostero.svg' },
     { name: 'Usuarios', path: '/admin/usuarios', icon: '/usuarios.svg' },
     { name: 'Reportes', path: '/admin/reportes', icon: '/reporte.svg' },
     { name: 'Mi Perfil', path: '/admin/perfil', icon: '/usuarios.svg' },
-    
+    { name: 'Cerrar Sesión', path: '/login', icon: '/salir.svg' },
 
   ];
 
   const menuItems = isAdmin
     ? isSuperAdmin
-      ? [menuAdmin[0], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(1)]
+      ? [
+          menuAdmin[0],
+          { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' },
+          { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/reporte.svg' },
+          ...menuAdmin.slice(1),
+        ]
       : menuAdmin
     : menuGuardiana;
 
@@ -124,7 +129,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         })}
       </nav>
 
-      {/* Botón Salir */}
+      {/* Botón Salir
       <div className="p-4 border-t border-[#4A2E18]/10">
         <button
           onClick={handleLogout}
@@ -133,7 +138,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <img src="/salir.svg" alt="Cerrar Sesión" className="w-5 h-5 object-contain opacity-70" />
           Cerrar Sesión
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 };

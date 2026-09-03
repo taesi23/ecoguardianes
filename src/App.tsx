@@ -4,6 +4,7 @@ import { Landing } from './components/Landing/Landing';
 import { LandingFDMA } from './components/Landing/LandingFDMA';
 import { Footer } from './components/Footer/Footer';
 import { Informacion } from './components/pages/Informacion';
+import Manuales from './components/pages/Manuales';
 
 import AvisoPrivacidad from './components/pages/AvisoPrivacidad';
 import TerminosCondiciones from './components/pages/TerminosCondiciones';
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/" element={<LandingFDMA />} />
           <Route path="/ecoguardianes" element={<Landing />} />
           <Route path="/info" element={<Informacion />} />
+          <Route path="/manuales" element={<Manuales />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/aviso-privacidad" element={<AvisoPrivacidad />} />

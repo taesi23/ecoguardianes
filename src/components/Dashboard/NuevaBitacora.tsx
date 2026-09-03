@@ -658,9 +658,9 @@ export default function NuevaBitacora() {
                   <div className="pointer-events-none flex flex-col items-center justify-center">
                     <UploadCloud className="mb-3 h-10 w-10 text-gray-400" />
                     <p className="mb-1 text-sm text-gray-600">
-                      <span className="font-semibold text-green-600">Haz clic para tomar foto</span> o elegir imagen
+                      <span className="font-semibold text-green-600">Haz clic para tomar foto</span> 
                     </p>
-                    <p className="text-xs text-gray-500">Se abre la cámara del teléfono en Android/iPhone</p>
+                    <p className="text-xs text-gray-500">Se abre la cámara del teléfono.</p>
                   </div>
                 </label>
 
