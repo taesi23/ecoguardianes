@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // Recibe la función onClose para cerrar el menú en celulares
 export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(() => location.pathname.startsWith('/admin'));
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [cargandoRol, setCargandoRol] = useState(true);
@@ -38,11 +37,6 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
     cargarRol();
   }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
 
   const menuGuardiana = [
     { name: 'Inicio', path: '/dashboard', icon: '/inicio.svg' },
