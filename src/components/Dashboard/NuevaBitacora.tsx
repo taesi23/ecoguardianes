@@ -313,6 +313,7 @@ export default function NuevaBitacora() {
 
             if (esInput && event.nativeEvent.submitter === null) {
               event.preventDefault();
+              event.stopPropagation();
               avanzarAlSiguienteControl(event.currentTarget, actual);
             }
           }}
@@ -328,8 +329,14 @@ export default function NuevaBitacora() {
 
             if (event.key === 'Enter' && esControlSecuencial) {
               event.preventDefault();
+              event.stopPropagation();
 
-              if (target) avanzarAlSiguienteControl(event.currentTarget, target);
+              if (target) {
+                avanzarAlSiguienteControl(event.currentTarget, target);
+                if (target instanceof HTMLInputElement && target.type === 'text') {
+                  requestAnimationFrame(() => avanzarAlSiguienteControl(event.currentTarget, target));
+                }
+              }
             }
           }}
           className="space-y-6"
@@ -414,7 +421,7 @@ export default function NuevaBitacora() {
                   <FormItem>
                     <FormLabel>Tipo de Residuos</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Restos de fruta, café..." {...field} />
+                      <Input placeholder="Ej. Restos de fruta, café..." enterKeyHint="next" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
