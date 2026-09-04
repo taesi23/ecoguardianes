@@ -44,7 +44,9 @@ export default function Manuales() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#d8ece1] text-[#2d6a4f]">
             <BookOpen className="h-8 w-8" aria-hidden="true" />
           </div>
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-[#2d6a4f]">Guía Eco Guardianes</p>
+          <a href="https://drive.google.com/file/d/1wBrIE5yx72qfQU6B8CQRHFTGjEO7bP3u/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-[#2d6a4f]">Guía Eco Guardianes</p>
+          </a>
           <h1 className="text-4xl font-extrabold leading-tight text-[#4a3728] md:text-5xl">Manuales de uso</h1>
           <p className="mx-auto items-center mt-5 max-w-2xl text-lg  text-[#4a3728]/80">
             Aquí encontrará instrucciones sencillas para usar la plataforma.
@@ -61,7 +63,7 @@ export default function Manuales() {
             <a href="/registro" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#2d6a4f] px-5 py-3 text-base font-bold text-white transition hover:bg-[#1b4332]">
               <UserPlus className="h-5 w-5" aria-hidden="true" /> Ir a "Registro"
             </a>
-            <a href="https://drive.google.com/file/d/1Nrcwt85StGxXp2GF69hW86qSrR7jKdz_/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-5 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]">
+            <a href="https://drive.google.com/file/d/1TKK49tpYLj9iqS6P9gorY7YvCoKO3eMp/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-5 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]">
               <PlayCircle className="h-5 w-5" aria-hidden="true" /> Ver tutorial paso a paso
             </a>
           </div>
@@ -78,24 +80,49 @@ export default function Manuales() {
             <a href="/login" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#2d6a4f] px-5 py-3 text-base font-bold text-white transition hover:bg-[#1b4332]">
               <LogIn className="h-5 w-5" aria-hidden="true" /> Ir a "Inicio de sesión"
             </a>
-            <a href="https://drive.google.com/file/d/1Nrcwt85StGxXp2GF69hW86qSrR7jKdz_/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-5 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]">
-              <PlayCircle className="h-5 w-5" aria-hidden="true" /> Ver tutorial paso a paso
-            </a>
           </div>
 
         </section>
 
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#4a3728]/10 sm:p-8" aria-labelledby="visita">
-          <div className="mb-6 flex items-center gap-4">
-            <div className="rounded-xl bg-[#d8ece1] p-3 text-[#2d6a4f]"><ClipboardCheck className="h-7 w-7" aria-hidden="true" /></div>
-            <div><p className="text-sm font-bold uppercase tracking-wide text-[#2d6a4f]">Actividad principal</p><h2 id="visita" className="text-2xl font-bold">Registrar una visita o monitoreo</h2></div>
-          </div>
-          <ListaPasos pasos={pasosVisita} />
-          <div className="mt-7 flex items-start gap-3 rounded-xl bg-[#fff8df] p-4 text-base leading-relaxed">
-            <Leaf className="mt-1 h-5 w-5 shrink-0 text-[#2d6a4f]" aria-hidden="true" />
-            <p><strong>Consejo:</strong> registre la visita el mismo día para recordar mejor lo que observó.</p>
-          </div>
-        </section>
+  {/* 1. Encabezado */}
+  <div className="mb-6 flex items-center gap-4">
+    <div className="rounded-xl bg-[#d8ece1] p-3 text-[#2d6a4f]">
+      <ClipboardCheck className="h-7 w-7" aria-hidden="true" />
+    </div>
+    <div>
+      <p className="text-sm font-bold uppercase tracking-wide text-[#2d6a4f]">Actividad principal</p>
+      <h2 id="visita" className="text-2xl font-bold text-gray-900">Registrar una visita o monitoreo</h2>
+    </div>
+  </div>
+
+  {/* 2. Lista de Pasos */}
+  <ListaPasos pasos={pasosVisita} />
+
+  {/* 3. Contenedor inferior: Consejo y Botón separados */}
+  <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    {/* Botón de Tutorial */}
+    <a 
+      href="https://drive.google.com/file/d/1YyWqGmSYjZHJuYPzdwiHH1Pg5ew7-HmU/view?usp=sharing" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="inline-flex shrink-0 min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-6 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]"
+    >
+      <PlayCircle className="h-5 w-5" aria-hidden="true" /> 
+      Ver tutorial
+    </a>
+
+    
+    {/* Consejo (Alerta amarilla) */}
+    <div className="flex flex-1 items-start gap-3 rounded-xl bg-[#fff8df] p-4 text-base leading-relaxed text-[#4a3728]">
+      <Leaf className="mt-1 h-5 w-5 shrink-0 text-[#2d6a4f]" aria-hidden="true" />
+      <p>
+        <strong>Consejo:</strong> Registre la visita el mismo día para recordar mejor lo que observó.
+      </p>
+    </div>
+        
+  </div>
+</section>
 
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#4a3728]/10 sm:p-8" aria-labelledby="historial">
           <div className="mb-6 flex items-center gap-4">
@@ -103,7 +130,7 @@ export default function Manuales() {
             <div><p className="text-sm font-bold uppercase tracking-wide text-[#2d6a4f]">Consulte sus registros</p><h2 id="historial" className="text-2xl font-bold">Ver mi historial</h2></div>
           </div>
           <ListaPasos pasos={pasosHistorial} />
-          <a href="https://drive.google.com/file/d/1Nrcwt85StGxXp2GF69hW86qSrR7jKdz_/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-5 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]">
+          <a href="https://drive.google.com/file/d/1YyWqGmSYjZHJuYPzdwiHH1Pg5ew7-HmU/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-[#2d6a4f] px-5 py-3 text-base font-bold text-[#2d6a4f] transition hover:bg-[#d8ece1]">
             <PlayCircle className="h-5 w-5" aria-hidden="true" /> Ver tutorial paso a paso
           </a>
         </section>

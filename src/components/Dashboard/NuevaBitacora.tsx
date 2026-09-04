@@ -471,7 +471,7 @@ export default function NuevaBitacora() {
           {/* SECCIÓN 2: ESTADO FÍSICO */}
           <Card>
             <CardHeader>
-              <CardTitle>2. Estado Físico del Compost</CardTitle>
+              <CardTitle>2. Estado Físico de la Composta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
               <FormField

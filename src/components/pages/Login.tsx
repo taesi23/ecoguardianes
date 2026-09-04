@@ -133,9 +133,15 @@ export const Login = () => {
 
       <div className="mt-8 text-center space-y-3">
         <p className="text-sm font-medium text-[#4A2E18]/70">
+          ¿No sabes cómo iniciar sesión?{' '}
+          <Link to="/manuales" className="text-[#2D7A3E] font-bold hover:underline">
+            Consulta el manual
+          </Link>
+        </p>
+        <p className="text-sm font-medium text-[#4A2E18]/70">
           ¿No tienes cuenta?{' '}
           <Link to="/registro" className="text-[#2D7A3E] font-bold hover:underline">
-            Únete aquí
+            Regístrate aquí
           </Link>
         </p>
         <Link to="/" className="block text-sm font-medium text-[#4A2E18]/70 hover:text-[#4A2E18]">

@@ -248,6 +248,12 @@ export const Registro = () => {
 
       <div className="mt-8 text-center space-y-3">
         <p className="text-sm font-medium text-[#4A2E18]/70">
+          ¿No sabes cómo registrarte?{' '}
+          <Link to="/manuales" className="text-[#2D7A3E] font-bold hover:underline">
+            Consulta el manual
+          </Link>
+        </p>
+        <p className="text-sm font-medium text-[#4A2E18]/70">
           ¿Ya tienes una cuenta?{' '}
           <Link to="/login" className="text-[#2D7A3E] font-bold hover:underline">
             Inicia sesión aquí
