@@ -7,7 +7,7 @@ export const DashboardLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F9F7F1] flex font-sans text-[#4A2E18]">
+    <div className="min-h-screen w-full max-w-full min-w-0 overflow-x-hidden bg-[#F9F7F1] flex font-sans text-[#4A2E18]">
       
       {/* Menú lateral (Desktop) - Se oculta en celulares, se muestra en pantallas medianas o grandes */}
       <div className="hidden md:block">
@@ -31,7 +31,7 @@ export const DashboardLayout = () => {
       )}
 
       {/* Contenedor Principal Central */}
-      <main className="min-h-screen flex-1 flex flex-col">
+      <main className="min-h-screen min-w-0 flex-1 flex flex-col overflow-x-hidden">
         
         {/* Barra superior móvil */}
         <header className="md:hidden bg-[#FFF8DF] border-b border-[#4A2E18]/10 p-4 flex justify-between items-center z-40 relative shadow-sm">
@@ -50,7 +50,7 @@ export const DashboardLayout = () => {
         </header>
 
         {/* Área donde cargan las páginas (con padding más amigable para celular) */}
-        <div className="flex-1 p-4 sm:p-6 md:p-8">
+        <div className="w-full max-w-full min-w-0 flex-1 p-4 sm:p-6 md:p-8">
           <Outlet /> 
         </div>
 
