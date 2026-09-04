@@ -204,7 +204,7 @@ export const Informacion = () => {
             <br />
             
             <a 
-              href="https://forms.gle/UorbVR2sCbMEFB9M7" 
+              href="https://docs.google.com/forms/d/e/1FAIpQLScG-OcX0Qehprh5PRyD6ThKUM1nsP9vi-msq6x_IgW6XjvKqg/viewform?usp=preview" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hero-primary inline-flex items-center gap-2 hover:scale-105 transform transition-transform"
