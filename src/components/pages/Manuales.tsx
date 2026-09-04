@@ -44,13 +44,12 @@ export default function Manuales() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#d8ece1] text-[#2d6a4f]">
             <BookOpen className="h-8 w-8" aria-hidden="true" />
           </div>
-          <a href="https://drive.google.com/file/d/1wBrIE5yx72qfQU6B8CQRHFTGjEO7bP3u/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+          <a href="https://drive.google.com/file/d/1psTbiKpZVNgJKX14Ld7SUFQeUoVyT7pw/view?usp=sharing" target="_blank" rel="noopener noreferrer">
             <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-[#2d6a4f]">Guía Eco Guardianes</p>
-          </a>
           <h1 className="text-4xl font-extrabold leading-tight text-[#4a3728] md:text-5xl">Manuales de uso</h1>
           <p className="mx-auto items-center mt-5 max-w-2xl text-lg  text-[#4a3728]/80">
-            Aquí encontrará instrucciones sencillas para usar la plataforma.
-          </p>
+            Haga clic <a href="https://drive.google.com/file/d/1psTbiKpZVNgJKX14Ld7SUFQeUoVyT7pw/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-[#2d6a4f] hover:underline">aquí</a> en el enlace y encontrará un manual con instrucciones sencillas para usar la plataforma.
+          </p></a>
         </header>
 
         <section className="mb-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#4a3728]/10 sm:p-8" aria-labelledby="empezar">
