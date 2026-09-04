@@ -123,9 +123,9 @@ export default function Inicio() {
                   <strong>Código de acceso:</strong> {datos.codigoColonia}
                 </div>
 
-                <div className="bg-white/40 rounded-lg px-3 py-2 md:col-span-2">
+                {/* <div className="bg-white/40 rounded-lg px-3 py-2 md:col-span-2">
                   <strong>Código del compostero:</strong> {datos.codigoCompostero}
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-4 rounded-xl border border-green-200 bg-white/70 p-3 text-sm text-green-900 font-medium flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

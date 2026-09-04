@@ -1,214 +1,286 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { AlertCircle, Edit, Eye, EyeOff, Image, Loader2, Plus, Trash2, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-type Convocatoria = {
+interface Convocatoria {
   id: string;
   titulo: string;
   descripcion: string;
-  imagen_url: string | null;
+  imagen_url: string;
+  enlace_url?: string;
   activo: boolean;
   created_at: string;
-};
+}
+
+interface FormularioConvocatoria {
+  titulo: string;
+  descripcion: string;
+  enlace_url: string;
+  imagen: File | null;
+}
 
 const BUCKET = 'imagenes_convocatorias';
 
-function obtenerRutaImagen(imagenUrl: string | null) {
-  if (!imagenUrl) return null;
+const formularioInicial: FormularioConvocatoria = {
+  titulo: '',
+  descripcion: '',
+  enlace_url: '',
+  imagen: null,
+};
 
+function obtenerRutaImagen(url: string) {
   const marcador = `/storage/v1/object/public/${BUCKET}/`;
-  const indice = imagenUrl.indexOf(marcador);
-  return indice === -1 ? null : decodeURIComponent(imagenUrl.slice(indice + marcador.length));
+  const indice = url.indexOf(marcador);
+  return indice === -1 ? null : decodeURIComponent(url.slice(indice + marcador.length));
 }
 
 export default function AdminConvocatorias() {
-  const navigate = useNavigate();
   const [convocatorias, setConvocatorias] = useState<Convocatoria[]>([]);
+  const [formulario, setFormulario] = useState(formularioInicial);
+  const [formularioAbierto, setFormularioAbierto] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [imagenActual, setImagenActual] = useState('');
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [imagenAnterior, setImagenAnterior] = useState<string | null>(null);
-  const [formulario, setFormulario] = useState({ titulo: '', descripcion: '' });
-  const [imagen, setImagen] = useState<File | null>(null);
+  const [esSuperAdmin, setEsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    const cargarConvocatorias = async () => {
-      setCargando(true);
-      setError(null);
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('No autorizado');
-
-        const { data: usuario, error: usuarioError } = await supabase
-          .from('usuarios')
-          .select('roles(nombre)')
-          .eq('auth_user_id', user.id)
-          .single();
-
-        if (usuarioError) throw usuarioError;
-        const roles = usuario?.roles as { nombre?: string } | { nombre?: string }[] | null;
-        const rol = Array.isArray(roles) ? roles[0]?.nombre : roles?.nombre;
-        if (rol !== 'Super Admin') {
-          navigate('/admin');
-          return;
-        }
-
-        const { data, error: convocatoriasError } = await supabase
-          .from('convocatorias')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (convocatoriasError) throw convocatoriasError;
-        setConvocatorias((data || []) as Convocatoria[]);
-      } catch (err) {
-        console.error(err);
-        setError('No se pudieron cargar las convocatorias.');
-      } finally {
-        setCargando(false);
-      }
-    };
-
     cargarConvocatorias();
-  }, [navigate]);
+    verificarSuperAdmin();
+  }, []);
 
-  const abrirNuevo = () => {
+  async function verificarSuperAdmin() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('roles(nombre)')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    const roles = usuario?.roles as { nombre?: string } | { nombre?: string }[] | null;
+    const rol = Array.isArray(roles) ? roles[0]?.nombre : roles?.nombre;
+    setEsSuperAdmin(rol === 'Super Admin');
+  }
+
+  async function cargarConvocatorias() {
+    setCargando(true);
+    setError(null);
+
+    const { data, error: errorConsulta } = await supabase
+      .from('convocatorias')
+      .select('id, titulo, descripcion, imagen_url, enlace_url, activo, created_at')
+      .order('created_at', { ascending: false });
+
+    if (errorConsulta) {
+      setError('No se pudieron cargar las convocatorias.');
+      console.error(errorConsulta);
+    } else {
+      setConvocatorias((data || []) as Convocatoria[]);
+    }
+    setCargando(false);
+  }
+
+  function abrirNueva() {
     setEditandoId(null);
-    setImagenAnterior(null);
-    setFormulario({ titulo: '', descripcion: '' });
-    setImagen(null);
-    setModalAbierto(true);
-  };
+    setImagenActual('');
+    setFormulario(formularioInicial);
+    setFormularioAbierto(true);
+  }
 
-  const abrirEdicion = (convocatoria: Convocatoria) => {
+  function abrirEdicion(convocatoria: Convocatoria) {
     setEditandoId(convocatoria.id);
-    setImagenAnterior(convocatoria.imagen_url);
-    setFormulario({ titulo: convocatoria.titulo, descripcion: convocatoria.descripcion });
-    setImagen(null);
-    setModalAbierto(true);
-  };
+    setFormularioAbierto(true);
+    setImagenActual(convocatoria.imagen_url);
+    setFormulario({ titulo: convocatoria.titulo, descripcion: convocatoria.descripcion, enlace_url: convocatoria.enlace_url || '', imagen: null });
+  }
 
-  const manejarImagen = (event: ChangeEvent<HTMLInputElement>) => {
-    setImagen(event.target.files?.[0] || null);
-  };
+  function manejarCambio(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = e.target;
+    setFormulario((actual) => ({ ...actual, [name]: value }));
+  }
 
-  const guardarConvocatoria = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  function manejarImagen(e: ChangeEvent<HTMLInputElement>) {
+    setFormulario((actual) => ({ ...actual, imagen: e.target.files?.[0] || null }));
+  }
+
+  async function subirImagen(imagen: File) {
+    const extension = imagen.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const ruta = `convocatorias/${crypto.randomUUID()}.${extension}`;
+    const { error: errorSubida } = await supabase.storage.from(BUCKET).upload(ruta, imagen, {
+      cacheControl: '3600',
+      contentType: imagen.type,
+      upsert: false,
+    });
+
+    if (errorSubida) throw errorSubida;
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(ruta);
+    return { ruta, url: data.publicUrl };
+  }
+
+  async function guardar(e: FormEvent) {
+    e.preventDefault();
+    if (!formulario.titulo.trim() || !formulario.descripcion.trim()) {
+      toast.error('Completa el título y la descripción.');
+      return;
+    }
+    if (!editandoId && !formulario.imagen) {
+      toast.error('Selecciona una imagen para la convocatoria.');
+      return;
+    }
+
     setGuardando(true);
-    let nuevaRuta: string | null = null;
+    let imagenSubida: { ruta: string; url: string } | null = null;
 
     try {
-      let imagenUrl = imagenAnterior;
+      const convocatoriaActual = convocatorias.find((item) => item.id === editandoId);
+      let imagenUrl = convocatoriaActual?.imagen_url || '';
 
-      if (imagen) {
-        nuevaRuta = `${crypto.randomUUID()}-${imagen.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`;
-        const { error: uploadError } = await supabase.storage.from(BUCKET).upload(nuevaRuta, imagen, {
-          cacheControl: '3600',
-          contentType: imagen.type,
-          upsert: false,
-        });
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(nuevaRuta);
-        imagenUrl = publicUrlData.publicUrl;
+      if (formulario.imagen) {
+        imagenSubida = await subirImagen(formulario.imagen);
+        imagenUrl = imagenSubida.url;
       }
 
-      const registro = { titulo: formulario.titulo.trim(), descripcion: formulario.descripcion.trim(), imagen_url: imagenUrl };
-      const resultado = editandoId
-        ? await supabase.from('convocatorias').update(registro).eq('id', editandoId)
-        : await supabase.from('convocatorias').insert(registro);
+      const datos = {
+        titulo: formulario.titulo.trim(),
+        descripcion: formulario.descripcion.trim(),
+        enlace_url: formulario.enlace_url.trim() || null,
+        imagen_url: imagenUrl,
+        ...(editandoId ? {} : { activo: true }),
+      };
 
-      if (resultado.error) throw resultado.error;
+      const respuesta = editandoId
+        ? await supabase.from('convocatorias').update(datos).eq('id', editandoId)
+        : await supabase.from('convocatorias').insert(datos);
 
-      if (imagen && imagenAnterior) {
-        const rutaAnterior = obtenerRutaImagen(imagenAnterior);
+      if (respuesta.error) throw respuesta.error;
+
+      if (editandoId && formulario.imagen && convocatoriaActual?.imagen_url) {
+        const rutaAnterior = obtenerRutaImagen(convocatoriaActual.imagen_url);
         if (rutaAnterior) await supabase.storage.from(BUCKET).remove([rutaAnterior]);
       }
 
-      setModalAbierto(false);
-      const { data } = await supabase.from('convocatorias').select('*').order('created_at', { ascending: false });
-      setConvocatorias((data || []) as Convocatoria[]);
+      toast.success(editandoId ? 'Convocatoria actualizada.' : 'Convocatoria creada.');
+      setFormulario(formularioInicial);
+      setEditandoId(null);
+      setImagenActual('');
+      setFormularioAbierto(false);
+      await cargarConvocatorias();
     } catch (err) {
+      if (imagenSubida) await supabase.storage.from(BUCKET).remove([imagenSubida.ruta]);
       console.error(err);
-      if (nuevaRuta) await supabase.storage.from(BUCKET).remove([nuevaRuta]);
-      alert('No se pudo guardar la convocatoria. Verifica los permisos de la tabla y del bucket.');
+      toast.error('No se pudo guardar la convocatoria.');
     } finally {
       setGuardando(false);
     }
-  };
+  }
 
-  const alternarEstado = async (convocatoria: Convocatoria) => {
-    const { error: updateError } = await supabase
+  async function alternarEstado(convocatoria: Convocatoria) {
+    const { error: errorActualizacion } = await supabase
       .from('convocatorias')
       .update({ activo: !convocatoria.activo })
       .eq('id', convocatoria.id);
 
-    if (updateError) {
-      alert('No se pudo cambiar el estado.');
+    if (errorActualizacion) {
+      toast.error('No se pudo cambiar el estado.');
       return;
     }
-    setConvocatorias((actuales) => actuales.map((item) => item.id === convocatoria.id ? { ...item, activo: !item.activo } : item));
-  };
+    setConvocatorias((actuales) => actuales.map((item) => item.id === convocatoria.id
+      ? { ...item, activo: !item.activo }
+      : item));
+  }
 
-  const eliminarConvocatoria = async (convocatoria: Convocatoria) => {
-    if (!window.confirm(`¿Eliminar "${convocatoria.titulo}" permanentemente?`)) return;
+  async function eliminar(convocatoria: Convocatoria) {
+    if (!window.confirm(`¿Eliminar "${convocatoria.titulo}"? Esta acción no se puede deshacer.`)) return;
 
-    const { error: deleteError } = await supabase.from('convocatorias').delete().eq('id', convocatoria.id);
-    if (deleteError) {
-      alert('No se pudo eliminar la convocatoria.');
+    const { error: errorEliminacion } = await supabase
+      .from('convocatorias')
+      .delete()
+      .eq('id', convocatoria.id);
+
+    if (errorEliminacion) {
+      toast.error('No se pudo eliminar la convocatoria.');
       return;
     }
 
     const ruta = obtenerRutaImagen(convocatoria.imagen_url);
     if (ruta) await supabase.storage.from(BUCKET).remove([ruta]);
     setConvocatorias((actuales) => actuales.filter((item) => item.id !== convocatoria.id));
-  };
+    toast.success('Convocatoria eliminada.');
+  }
 
-  if (cargando) {
-    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-green-600" /></div>;
+  if (!esSuperAdmin && !cargando) {
+    return <div className="mx-auto max-w-4xl p-8 text-center text-red-700">No tienes permisos para administrar convocatorias.</div>;
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 animate-in fade-in duration-500">
-      <div className="mb-8 flex flex-col gap-4 border-b border-[#4A2E18]/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-4 border-b border-[#4A2E18]/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">Convocatorias</h1>
-          <p className="mt-1 font-medium text-green-700">Publicaciones visibles en la landing page</p>
+          <h1 className="text-3xl font-bold text-gray-900">Convocatorias</h1>
+          <p className="mt-1 font-medium text-green-700">Publica oportunidades para tu comunidad</p>
         </div>
-        <button onClick={abrirNuevo} className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+        <button onClick={abrirNueva} className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
           <Plus className="h-5 w-5" /> Nueva convocatoria
         </button>
       </div>
 
-      {error && <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700"><AlertCircle className="h-5 w-5" />{error}</div>}
+      {error && <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700"><AlertCircle className="h-5 w-5" />{error}</div>}
+
+      {formularioAbierto && (
+        <Card className="border-transparent bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-gray-50/50 px-6 py-4">
+            <CardTitle className="text-lg text-gray-800">{editandoId ? 'Editar convocatoria' : 'Nueva convocatoria'}</CardTitle>
+            <button onClick={() => { setEditandoId(null); setFormulario(formularioInicial); setImagenActual(''); setFormularioAbierto(false); }} className="rounded-lg p-2 text-gray-500 hover:bg-gray-200" title="Cerrar formulario"><X className="h-5 w-5" /></button>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={guardar} className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-5">
+                <label className="block text-sm font-semibold text-gray-700">Título<input name="titulo" value={formulario.titulo} onChange={manejarCambio} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:outline-none" required /></label>
+                <label className="block text-sm font-semibold text-gray-700">Enlace de redirección (Opcional)<input name="enlace_url" type="url" placeholder="https://forms.gle/..." value={formulario.enlace_url} onChange={manejarCambio} className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:outline-none" /></label>
+                <label className="block text-sm font-semibold text-gray-700">
+  Descripción
+  <textarea 
+    name="descripcion" 
+    value={formulario.descripcion} 
+    onChange={manejarCambio} 
+    maxLength={180} /* Limita físicamente la escritura a 180 caracteres */
+    rows={4} 
+    className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-green-500 focus:outline-none resize-none" 
+    required 
+  />
+  {/* Contador dinámico que cambia a rojo al llegar al límite */}
+  <span className={`text-xs block mt-1 text-right font-medium ${
+    formulario.descripcion.length >= 180 ? 'text-red-600' : 'text-gray-500'
+  }`}>
+    {formulario.descripcion.length} / 180 caracteres permitidos
+  </span>
+</label>
+               </div>
+              <div className="space-y-4">
+                <label className="block text-sm font-semibold text-gray-700">Imagen<input type="file" accept="image/*" onChange={manejarImagen} className="mt-2 block w-full rounded-lg border border-gray-300 p-2 text-sm" required={!editandoId} /></label>
+                {imagenActual && !formulario.imagen && <img src={imagenActual} alt="Imagen actual" className="h-40 w-full rounded-lg object-cover" />}
+                {formulario.imagen && <p className="text-sm text-green-700">Imagen seleccionada: {formulario.imagen.name}</p>}
+                <button type="submit" disabled={guardando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60">
+                  {guardando ? <><Loader2 className="h-5 w-5 animate-spin" /> Guardando...</> : <><Image className="h-5 w-5" /> Guardar convocatoria</>}
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="overflow-hidden border-transparent bg-white shadow-sm">
+        <CardHeader className="border-b bg-gray-50/50 px-6 py-4"><CardTitle className="text-lg text-gray-800">Convocatorias registradas</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b bg-gray-50/50 text-xs uppercase tracking-wider text-gray-500"><tr><th className="px-6 py-4">Imagen</th><th className="px-6 py-4">Título</th><th className="px-6 py-4">Registro</th><th className="px-6 py-4">Estado</th><th className="px-6 py-4 text-right">Acciones</th></tr></thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {convocatorias.map((convocatoria) => (
-                  <tr key={convocatoria.id} className={`hover:bg-green-50/30 ${!convocatoria.activo ? 'opacity-60' : ''}`}>
-                    <td className="px-6 py-4">{convocatoria.imagen_url ? <img src={convocatoria.imagen_url} alt="" className="h-12 w-20 rounded-lg object-cover" /> : <Image className="h-8 w-8 text-gray-300" />}</td>
-                    <td className="max-w-xs px-6 py-4 font-semibold text-gray-900">{convocatoria.titulo}</td>
-                    <td className="px-6 py-4 text-gray-500">{new Date(convocatoria.created_at).toLocaleDateString('es-MX')}</td>
-                    <td className="px-6 py-4"><span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${convocatoria.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{convocatoria.activo ? 'Activa' : 'Inactiva'}</span></td>
-                    <td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => abrirEdicion(convocatoria)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-green-600" title="Editar"><Edit className="h-4 w-4" /></button><button onClick={() => alternarEstado(convocatoria)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-green-600" title={convocatoria.activo ? 'Desactivar' : 'Activar'}>{convocatoria.activo ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button><button onClick={() => eliminarConvocatoria(convocatoria)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600" title="Eliminar"><Trash2 className="h-4 w-4" /></button></div></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {convocatorias.length === 0 && <div className="p-12 text-center text-gray-500">Aún no hay convocatorias registradas.</div>}
-          </div>
+          {cargando ? <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-green-600" /></div> : convocatorias.length === 0 ? <p className="p-8 text-center text-gray-600">Aún no hay convocatorias registradas.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="border-b bg-white text-xs uppercase tracking-wider text-gray-500"><tr><th className="px-6 py-4">Imagen</th><th className="px-6 py-4">Título</th><th className="px-6 py-4">Estado</th><th className="px-6 py-4">Fecha</th><th className="px-6 py-4 text-right">Acciones</th></tr></thead><tbody className="divide-y divide-gray-100">{convocatorias.map((convocatoria) => <tr key={convocatoria.id} className="hover:bg-green-50/30"><td className="px-6 py-4"><img src={convocatoria.imagen_url} alt="" className="h-14 w-20 rounded-md object-cover" /></td><td className="max-w-xs px-6 py-4 font-semibold text-gray-900"><span className="line-clamp-2">{convocatoria.titulo}</span></td><td className="px-6 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${convocatoria.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{convocatoria.activo ? 'Activa' : 'Inactiva'}</span></td><td className="px-6 py-4 text-gray-600">{new Date(convocatoria.created_at).toLocaleDateString('es-MX')}</td><td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => abrirEdicion(convocatoria)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-green-600" title="Editar"><Edit className="h-4 w-4" /></button><button onClick={() => alternarEstado(convocatoria)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-green-600" title={convocatoria.activo ? 'Desactivar' : 'Activar'}>{convocatoria.activo ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button><button onClick={() => eliminar(convocatoria)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-red-600" title="Eliminar"><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div>}
         </CardContent>
       </Card>
-
-      {modalAbierto && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"><div className="w-full max-w-lg rounded-2xl bg-white shadow-xl"><div className="flex items-center justify-between border-b px-6 py-4"><h2 className="text-xl font-bold text-gray-800">{editandoId ? 'Editar convocatoria' : 'Nueva convocatoria'}</h2><button onClick={() => setModalAbierto(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100" title="Cerrar"><X className="h-5 w-5" /></button></div><form onSubmit={guardarConvocatoria} className="space-y-5 p-6"><label className="block"><span className="mb-1 block text-sm font-medium text-gray-700">Título *</span><input required value={formulario.titulo} onChange={(event) => setFormulario({ ...formulario, titulo: event.target.value })} className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" /></label><label className="block"><span className="mb-1 block text-sm font-medium text-gray-700">Descripción *</span><textarea required rows={5} value={formulario.descripcion} onChange={(event) => setFormulario({ ...formulario, descripcion: event.target.value })} className="w-full resize-y rounded-lg border border-gray-300 px-4 py-2.5 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" /></label><label className="block"><span className="mb-1 block text-sm font-medium text-gray-700">Imagen {editandoId ? '(opcional para reemplazar)' : '*'}</span><input type="file" accept="image/*" required={!editandoId} onChange={manejarImagen} className="w-full rounded-lg border border-gray-300 p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-green-50 file:px-3 file:py-1.5 file:font-medium file:text-green-700" /></label><button type="submit" disabled={guardando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60">{guardando && <Loader2 className="h-5 w-5 animate-spin" />}{guardando ? 'Guardando...' : 'Guardar convocatoria'}</button></form></div></div>}
     </div>
   );
 }

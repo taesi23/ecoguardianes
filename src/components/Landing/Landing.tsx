@@ -7,7 +7,6 @@ import compostero1 from '../../stickers/compostero-1.svg';
 import manzanaComida from '../../stickers/manzana-comida.svg';
 import maceta from '../../stickers/maceta.svg';
 import gusano from '../../stickers/gusano-2.svg'; 
-import { Convocatorias } from './Convocatorias';
 
 const whyCards = [
   {
@@ -114,17 +113,12 @@ export const Landing = () => {
     <div className="landing-page">
       <section id="inicio" className="landing-hero">
         <div className="hero-copy">
-          
-
           <h1 className="landing-title">
-            Transformamos
-            <span className="hero-highlight">residuos en vida,</span>
-            juntos. <span className="hero-heart">-</span>
-          </h1>
-
-          <p className="hero-description">
-            Monitoreando hoy el compostero que transforma el mañana.
-          </p>
+          Unidos para transformar <span className="hero-highlight">residuos en vida.</span> 
+        </h1>
+         <p className="hero-description">
+             Monitoreando hoy el compostero que transforma el mañana.
+        </p>
 
           <div className="hero-actions">
             <Link to="/login" className="hero-primary">
@@ -156,8 +150,6 @@ export const Landing = () => {
         </div>
       </section>
 
-      <Convocatorias />
-
       <section id="Ecoguardianes" className="section-block">
         <div className="section-header">
           <h2 className="section-title">¿Qué es Eco Guardianes?</h2>
@@ -177,6 +169,7 @@ export const Landing = () => {
         </div>
       </section>
 
+    
       <section id="compostero" className="section-block">
         <div className="section-header section-header--compact">
           <h2 className="section-title">Composteros</h2>
@@ -257,8 +250,7 @@ export const Landing = () => {
           </div>
         </div>
       </section>
-
-      <section id="comunidad" className="section-block">
+      {/* <section id="comunidad" className="section-block">
         <h2 className="section-title section-title--center">Historias que inspiran</h2>
         <br />
 
@@ -277,72 +269,7 @@ export const Landing = () => {
             </article>
           ))}
         </div>
-      </section>
-
-      {/* <section id="contacto" className="section-block">
-        <div className="paper-card contact-card">
-          <div className="contact-heading">
-            <h2 className="section-title">Voluntariado</h2>
-            <p className="contact-description"> Envíanos un mensaje, contáctanos y te responderemos lo antes posible.
-            </p>
-          </div>
-
-          <form className="contact-form" onSubmit={handleContactSubmit}>
-            <label className="contact-field">
-              <span className="contact-label">Nombre completo:*</span>
-              <input
-                className="contact-input"
-                type="text"
-                name="nombreCompleto"
-                value={contactForm.nombreCompleto}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Correo electrónico:*</span>
-              <input
-                className="contact-input"
-                type="email"
-                name="correo"
-                value={contactForm.correo}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Número de teléfono:*</span>
-              <input
-                className="contact-input"
-                type="tel"
-                name="telefono"
-                value={contactForm.telefono}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            <label className="contact-field">
-              <span className="contact-label">Mensaje:*</span>
-              <textarea
-                className="contact-textarea"
-                name="mensaje"
-                value={contactForm.mensaje}
-                onChange={handleContactChange}
-                required
-              />
-            </label>
-
-            {feedbackMessage && <p className="contact-feedback">{feedbackMessage}</p>}
-
-            <button className="contact-button" type="submit" disabled={isSending}>
-              {isSending ? 'Enviando...' : 'Enviar mensaje'}
-            </button>
-          </form>
-        </div>
-      </section> */}
-    </div>
+      </section>   */}
+  </div>
   );
 };

@@ -21,6 +21,8 @@ type Metricas = {
 };
 
 export default function AdminDashboard() {
+  const whatsappGroupLink = 'https://chat.whatsapp.com/JmNLCT0TpYK9TqjfawWLdd?s=cl&p=i&mlu=0';
+
   const [composteros, setComposteros] = useState<Compostero[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +153,21 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">Panel Administrativo</h1>
           <p className="mt-1 font-medium text-green-700">Resumen operativo de {nombreZona}</p>
         </div>
+      </div>
+
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">Comunidad</p>
+          <h2 className="mt-1 text-lg font-bold text-gray-900">Grupo de WhatsApp</h2>
+        </div>
+        <a
+          href={whatsappGroupLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-full bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#1fad56]"
+        >
+          Unirme a la comunidad
+        </a>
       </div>
 
       {/* Tarjetas Redirigibles */}

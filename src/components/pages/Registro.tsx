@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import '../Landing/Landing.css';
 
@@ -9,9 +9,10 @@ export const Registro = () => {
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [codigo, setCodigo] = useState('COD-DE-ACCESO');
+  const [codigo, setCodigo] = useState('');
   const [coloniaId, setColoniaId] = useState<string | null>(null);
-  
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     nombre: '',
     apellido_paterno: '',
@@ -135,7 +136,7 @@ export const Registro = () => {
         </h2>
         <p className="text-[#4A2E18]/70 font-medium">
           {step === 1 
-            ? 'Ingresa el código proporcionado para tu colonia' 
+            ? 'Ingresa el código que te proporcionaron.' 
             : 'Completa tus datos para ser una Eco Guardian'}
         </p>
       </div>
@@ -152,14 +153,14 @@ export const Registro = () => {
         {step === 1 && (
           <form onSubmit={handleValidarCodigo} className="mt-4">
             <label className="contact-field block">
-              <span className="contact-label text-center text-lg block mb-2 text-[#2D7A3E]">Código de Colonia:</span>
+              <span className="contact-label text-center text-lg block mb-2 text-[#2D7A3E]">Tu código:</span>
               <input
                 className="contact-input w-full border-white focus:ring-2 focus:ring-[#E07A5F] outline-none text-center text-xl tracking-widest font-bold uppercase"
                 type="text"
                 required
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-                placeholder="Codigo de Acceso"
+                placeholder="ABC123"
               />
             </label>
             <div className="pt-6">
@@ -211,7 +212,25 @@ export const Registro = () => {
 
             <label className="contact-field block">
               <span className="contact-label text-[#2D7A3E]">Contraseña:*</span>
-              <input className="contact-input w-full mt-1 border-white" type="password" name="password" required minLength={6} value={formData.password} onChange={handleChange} />
+              <div className="relative">
+                <input
+                  className="contact-input w-full mt-1 border-white pr-11"
+                  type={mostrarPassword ? 'text' : 'password'}
+                  name="password"
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D7A3E] hover:text-[#235E30]"
+                  aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {mostrarPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </label>
 
             <div className="pt-4">
@@ -228,6 +247,12 @@ export const Registro = () => {
       </div>
 
       <div className="mt-8 text-center space-y-3">
+        <p className="text-sm font-medium text-[#4A2E18]/70">
+          ¿No sabes cómo registrarte?{' '}
+          <Link to="/manuales" className="text-[#2D7A3E] font-bold hover:underline">
+            Consulta el manual
+          </Link>
+        </p>
         <p className="text-sm font-medium text-[#4A2E18]/70">
           ¿Ya tienes una cuenta?{' '}
           <Link to="/login" className="text-[#2D7A3E] font-bold hover:underline">

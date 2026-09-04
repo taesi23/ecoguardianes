@@ -1,46 +1,49 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Importante importar esto
+import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
-// const navItems = [
-//   { label: 'Inicio', href: '/' },
-//   { label: 'Eco Guardianes', href: '#composteros' },
-//   { label: 'Nosotros', href: '#sobre-nosotros' },
-//   { label: 'Contacto', href: '#contacto' },
-//   { label: 'Información', href: '/info' }, // Nueva ruta unificada
-
-// ];
-
 const navItems = [
-  { label: 'Inicio', href: '/' }, // Te lleva a la página principal
-  { label: 'Eco Guardianes', href: '/#Ecoguardianes' }, // Te lleva al inicio y baja a composteros
-  { label: 'Nosotros', href: '/info' }, // Te lleva a la página de info
-  { label: 'Contacto', href: '/info#contacto' }, // Te lleva a info y baja a contacto
+  { label: 'FDMA', href: '/' },
+  { label: 'Eco Guardianes', href: '/ecoguardianes' },
+  { label: 'Nosotros & Contacto', href: '/info' },
 ];
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+
+  const isItemActive = (href: string) => {
+    const path = href.split('#')[0];
+    return location.pathname === path;
+  };
 
   return (
     <header className="header-container">
       <div className="header-inner">
-        <a href="#composteros" className="header-brand">
+        <Link to="/" className="header-brand" aria-label="Ir al inicio">
           <img src="/logo-horizontal.svg" alt="Eco Guardianes" className="brand-logo" />
-        </a>
+        </Link>
 
-        <nav className="header-nav">
+        <nav className="header-nav" aria-label="Navegación principal">
           {navItems.map((item) => (
-            <a key={item.href} href={item.href} className="nav-link">
+            <Link
+              key={item.href}
+              to={item.href}
+              className={`nav-link ${isItemActive(item.href) ? 'nav-link--active' : ''}`}
+            >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         <div className="header-actions">
-          <Link to="/login" className="header-cta" aria-label="Iniciar sesión">
-            <span>Únete</span>
-            <img src="/logo.svg" alt="" className="header-cta-logo" />
+          <Link to="/login" className="header-link-btn header-link-btn--ghost" aria-label="Iniciar sesión">
+            Iniciar sesión
+          </Link>
+
+          <Link to="/registro" className="header-link-btn header-link-btn--primary" aria-label="Registrarse">
+            Registro
           </Link>
 
           <button
@@ -57,17 +60,33 @@ export const Header = () => {
 
       {isOpen && (
         <div className="mobile-nav-wrapper">
-          <nav className="mobile-nav">
+          <nav className="mobile-nav" aria-label="Navegación móvil">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.href}
-                href={item.href}
-                className="nav-link mobile-nav-link"
+                to={item.href}
+                className={`nav-link mobile-nav-link ${isItemActive(item.href) ? 'mobile-nav-link--active' : ''}`}
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
+
+            <Link
+              to="/login"
+              className="mobile-nav-link mobile-nav-link--action"
+              onClick={() => setIsOpen(false)}
+            >
+              Iniciar sesión
+            </Link>
+
+            <Link
+              to="/registro"
+              className="mobile-nav-link mobile-nav-link--action mobile-nav-link--primary"
+              onClick={() => setIsOpen(false)}
+            >
+              Registro
+            </Link>
           </nav>
         </div>
       )}

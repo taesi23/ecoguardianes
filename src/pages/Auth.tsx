@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import '../components/Landing/Landing.css';
 
@@ -13,6 +14,7 @@ export const Auth = () => {
   const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -38,23 +40,29 @@ export const Auth = () => {
 
     try {
       if (isLogin) {
+        if (!formData.correo.trim() || !formData.password.trim()) {
+          throw new Error('Ingresa tu correo y contraseña para continuar.');
+        }
+
         const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: formData.correo,
+          email: formData.correo.trim(),
           password: formData.password,
         });
 
         if (authError) throw authError;
         if (data.user) navigate('/dashboard');
       } else {
+        if (!formData.nombre.trim() || !formData.apellido_paterno.trim() || !formData.apellido_materno.trim() || !formData.telefono.trim() || !formData.correo.trim()) {
+          throw new Error('Completa todos los campos obligatorios para crear tu cuenta.');
+        }
+
         const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
         if (!passwordRegex.test(formData.password)) {
-          setError('La contraseña debe tener al menos 6 caracteres, incluir una mayúscula y un número.');
-          setLoading(false);
-          return;
+          throw new Error('La contraseña debe tener al menos 6 caracteres, incluir una mayúscula y un número.');
         }
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.correo,
+          email: formData.correo.trim(),
           password: formData.password,
         });
 
@@ -64,7 +72,7 @@ export const Auth = () => {
         const { data: rolData, error: rolError } = await supabase
           .from('roles')
           .select('id')
-          .eq('nombre', 'Eco Guardiana')
+          .eq('nombre', 'Eco Guardian')
           .single();
 
         if (rolError || !rolData) throw new Error('Error al asignar el rol.');
@@ -105,7 +113,7 @@ export const Auth = () => {
           {isLogin ? 'Bienvenida de nuevo' : 'Únete a Eco Guardianes'}
         </h2>
         <p className="text-[#4A2E18]/70 font-medium text-lg">
-          {isLogin ? 'Ingresa a tu cuenta de Eco Guardiana' : 'Crea tu cuenta y forma parte del movimiento'}
+          {isLogin ? 'Ingresa a tu cuenta de Eco Guardian' : 'Crea tu cuenta y forma parte del movimiento'}
         </p>
       </div>
 
@@ -222,16 +230,31 @@ export const Auth = () => {
 
           <label className="contact-field block">
             <span className="contact-label text-[#2D7A3E] text-lg font-bold">Contraseña:*</span>
-            <input
-              className="contact-input w-full mt-1 border-white bg-[#E7F0EB] focus:ring-2 focus:ring-[#2D7A3E]"
-              type="password"
-              name="password"
-              required
-              minLength={6}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                className="contact-input w-full mt-1 border-white bg-[#E7F0EB] focus:ring-2 focus:ring-[#2D7A3E] pr-11"
+                type={mostrarPassword ? 'text' : 'password'}
+                name="password"
+                required
+                minLength={6}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D7A3E] hover:text-[#235E30]"
+                aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {mostrarPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            {!isLogin && (
+              <p className="mt-2 text-xs text-[#4A2E18]/70">
+                Debe tener al menos 6 caracteres, una mayúscula y un número.
+              </p>
+            )}
           </label>
 
           <div className="pt-4">

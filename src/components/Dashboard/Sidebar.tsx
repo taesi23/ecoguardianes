@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // Recibe la función onClose para cerrar el menú en celulares
 export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(() => location.pathname.startsWith('/admin'));
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [cargandoRol, setCargandoRol] = useState(true);
@@ -24,7 +23,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           .eq('auth_user_id', user.id)
           .single();
 
-        const roles: any = usuario?.roles;
+        const roles = usuario?.roles as { nombre?: string } | { nombre?: string }[] | null;
         const rol = Array.isArray(roles)
           ? roles[0]?.nombre
           : roles?.nombre;
@@ -39,35 +38,35 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     cargarRol();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
   const menuGuardiana = [
     { name: 'Inicio', path: '/dashboard', icon: '/inicio.svg' },
-    { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
+    { name: 'Registrar Visita', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/dashboard/Mi-Historial', icon: '/historial.svg' },
     { name: 'Comunidad', path: '/dashboard/Comunidad', icon: '/comunidad.svg' },
     { name: 'Mi Perfil', path: '/dashboard/Perfil', icon: '/usuarios.svg' },
+    { name: 'Cerrar Sesión', path: '/login', icon: '/salir.svg' },
   ];
 
   const menuAdmin = [
     { name: 'Inicio', path: '/admin', icon: '/inicio.svg' },
-    { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/comunidad.svg' },
-    { name: 'Actualizar Bitácora', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
+    { name: 'Registrar Visita', path: '/dashboard/Nueva-Bitacora', icon: '/bitacora.svg' },
     { name: 'Historial', path: '/admin/historial', icon: '/historial.svg' },
     { name: 'Composteros', path: '/admin/composteros', icon: '/compostero.svg' },
     { name: 'Usuarios', path: '/admin/usuarios', icon: '/usuarios.svg' },
     { name: 'Reportes', path: '/admin/reportes', icon: '/reporte.svg' },
     { name: 'Mi Perfil', path: '/admin/perfil', icon: '/usuarios.svg' },
-    
+    { name: 'Cerrar Sesión', path: '/login', icon: '/salir.svg' },
 
   ];
 
   const menuItems = isAdmin
     ? isSuperAdmin
-      ? [menuAdmin[0], menuAdmin[1], { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' }, ...menuAdmin.slice(2)]
+      ? [
+          menuAdmin[0],
+          { name: 'Colonias', path: '/admin/colonias', icon: '/comunidad.svg' },
+          { name: 'Convocatorias', path: '/admin/convocatorias', icon: '/reporte.svg' },
+          ...menuAdmin.slice(1),
+        ]
       : menuAdmin
     : menuGuardiana;
 
@@ -80,7 +79,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   }
 
   return (
-    <aside className="w-64 bg-[#FFF8DF] border-r border-[#4A2E18]/10 h-screen flex flex-col">
+    <aside className="sticky top-0 h-screen w-64 bg-[#FFF8DF] border-r border-[#4A2E18]/10 flex flex-col">
       
       {/* Cabecera del Sidebar */}
       <div className="p-6 flex items-center justify-between border-b border-[#4A2E18]/10">
@@ -124,7 +123,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
         })}
       </nav>
 
-      {/* Botón Salir */}
+      {/* Botón Salir
       <div className="p-4 border-t border-[#4A2E18]/10">
         <button
           onClick={handleLogout}
@@ -133,7 +132,7 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <img src="/salir.svg" alt="Cerrar Sesión" className="w-5 h-5 object-contain opacity-70" />
           Cerrar Sesión
         </button>
-      </div>
+      </div> */}
     </aside>
   );
 };

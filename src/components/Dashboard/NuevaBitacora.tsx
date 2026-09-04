@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertTriangle, UploadCloud } from 'lucide-react';
+import { AlertTriangle, Camera, UploadCloud } from 'lucide-react';
 import { supabase } from '@/lib/supabase'; // <-- Agrega esta línea en tus imports
 import toast from 'react-hot-toast';
 
@@ -31,20 +31,6 @@ const faunaOptions = [
   { id: "hongos", label: "Hongos o micelio blanco" },
 ] as const;
 
-// // Esquema de validación con Zod corregido (sin required_error)
-// const bitacoraSchema = z.object({
-//   compostero_id: z.string().min(1, "Selecciona un compostero"),
-//   cantidad_material: z.coerce.number().min(0.1, "La cantidad debe ser mayor a 0"),
-//   tipo_residuo: z.string().min(2, "Describe el tipo de residuo"),
-//   temperatura: z.enum(["fria", "tibia", "caliente"]),
-//   humedad: z.enum(["seco", "optimo", "excesivo"]),
-//   olor: z.enum(["bosque", "amoniaco", "sin_olor"]),
-//   fauna: z.array(z.string()).default([]),
-//   observaciones: z.string().optional(),
-//   propuesta_mejora: z.string().optional(),
-//   plagas: z.boolean().default(false),
-//   lixiviados: z.boolean().default(false),
-// });
 const bitacoraSchema = z.object({
   compostero_id: z.string().min(1, "Selecciona un compostero"),
   cantidad_material: z.coerce.number().min(0.1, "La cantidad debe ser mayor a 0"),
@@ -65,6 +51,7 @@ type BitacoraFormValues = z.infer<typeof bitacoraSchema>;
 export default function NuevaBitacora() {
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const previewUrlsRef = useRef<string[]>([]);
   const [isGuardando, setIsGuardando] = useState(false);
   const [listaComposteros, setListaComposteros] = useState<{ id: string; nombre: string; codigo: string }[]>([]);
 
@@ -103,10 +90,15 @@ export default function NuevaBitacora() {
 
     void cargarComposterosPermitidos();
 
-    return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
+  }, []);
+
+  useEffect(() => {
+    previewUrlsRef.current = previewUrls;
   }, [previewUrls]);
+
+  useEffect(() => () => {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   // Inicializar formulario
   const form = useForm({
@@ -200,31 +192,31 @@ export default function NuevaBitacora() {
       if (imagenes.length > 0 && visitaInsertada) {
         for (const file of imagenes) {
           const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
           
           // Subimos el archivo al bucket "fotografias"
           const { error: uploadError } = await supabase.storage
             .from('fotografias')
             .upload(fileName, file);
 
-          if (!uploadError) {
-            // Generar URL pública
-            const { data: publicUrlData } = supabase.storage
-              .from('fotografias')
-              .getPublicUrl(fileName);
+          if (uploadError) throw uploadError;
 
-            // Registrar en la tabla EVIDENCIAS
-            await supabase.from('evidencias').insert({
-              visita_id: visitaInsertada.id,
-              usuario_id: usuarioData.id,
-              tipo_evidencia: 'foto',
-              ruta_storage: fileName,
-              url_publica: publicUrlData.publicUrl,
-              nombre_archivo: file.name,
-              tipo_mime: file.type,
-              tamano_bytes: file.size
-            });
-          }
+          const { data: publicUrlData } = supabase.storage
+            .from('fotografias')
+            .getPublicUrl(fileName);
+
+          const { error: errorEvidencia } = await supabase.from('evidencias').insert({
+            visita_id: visitaInsertada.id,
+            usuario_id: usuarioData.id,
+            tipo_evidencia: 'foto',
+            ruta_storage: fileName,
+            url_publica: publicUrlData.publicUrl,
+            nombre_archivo: file.name,
+            tipo_mime: file.type,
+            tamano_bytes: file.size
+          });
+
+          if (errorEvidencia) throw errorEvidencia;
         }
       }
 
@@ -233,7 +225,10 @@ export default function NuevaBitacora() {
       // Limpiamos la pantalla y subimos  al inicio 
       form.reset();
       setImagenes([]);
-      setPreviewUrls([]);
+      setPreviewUrls((current) => {
+        current.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' }); // <-- Animación para subir
 
     } catch (error: any) {
@@ -245,21 +240,54 @@ export default function NuevaBitacora() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       const nextFiles = Array.from(e.target.files);
       const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
 
-      setImagenes(nextFiles);
-      setPreviewUrls((current) => {
-        current.forEach((url) => URL.revokeObjectURL(url));
-        return nextPreviews;
-      });
+      setImagenes((current) => [...current, ...nextFiles]);
+      setPreviewUrls((current) => [...current, ...nextPreviews]);
+
+      e.target.value = '';
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagenes((current) => current.filter((_, i) => i !== index));
+    setPreviewUrls((current) => {
+      const urlToRemove = current[index];
+      if (urlToRemove) URL.revokeObjectURL(urlToRemove);
+      return current.filter((_, i) => i !== index);
+    });
   };
 
   const handleInvalidSubmit = (erroresZod: unknown) => {
     console.log("Errores bloqueando el formulario:", erroresZod);
     toast.error("El formulario está incompleto o tiene errores. Revisa los mensajes en rojo debajo de cada campo.");
+  };
+
+  const avanzarAlSiguienteControl = (formulario: HTMLFormElement, actual: HTMLElement) => {
+    const selectorControles = 'input:not([type="file"]):not([type="hidden"]), select, textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]';
+    const controles = Array.from(formulario.querySelectorAll<HTMLElement>(selectorControles))
+      .filter((control) => {
+        const deshabilitado = control instanceof HTMLInputElement
+          || control instanceof HTMLSelectElement
+          || control instanceof HTMLTextAreaElement
+          || control instanceof HTMLButtonElement
+            ? control.disabled
+            : control.getAttribute('aria-disabled') === 'true';
+
+        return !deshabilitado && control.getClientRects().length > 0;
+      });
+    const siguienteControl = controles[controles.indexOf(actual) + 1];
+
+    if (actual.matches('[data-slot="checkbox"], [data-slot="radio-group-item"]')) {
+      actual.click();
+    }
+
+    if (siguienteControl) {
+      siguienteControl.focus({ preventScroll: true });
+      siguienteControl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   };
 
   return (
@@ -276,7 +304,43 @@ export default function NuevaBitacora() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}
+          onSubmitCapture={(event) => {
+            const actual = document.activeElement;
+            const esInput = actual instanceof HTMLInputElement
+              && !['file', 'hidden', 'submit', 'button'].includes(actual.type);
+
+            if (esInput && event.nativeEvent.submitter === null) {
+              event.preventDefault();
+              event.stopPropagation();
+              avanzarAlSiguienteControl(event.currentTarget, actual);
+            }
+          }}
+          onKeyDown={(event) => {
+            const elemento = event.target;
+            if (!(elemento instanceof HTMLElement)) return;
+
+            const selectorControles = 'input:not([type="file"]):not([type="hidden"]), select, textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]';
+            const target = elemento.closest<HTMLElement>(selectorControles);
+            const esControlSecuencial = target instanceof HTMLInputElement
+              || target instanceof HTMLSelectElement
+              || target?.matches('textarea, [data-slot="checkbox"], [data-slot="radio-group-item"]');
+
+            if (event.key === 'Enter' && esControlSecuencial) {
+              event.preventDefault();
+              event.stopPropagation();
+
+              if (target) {
+                avanzarAlSiguienteControl(event.currentTarget, target);
+                if (target instanceof HTMLInputElement && target.type === 'text') {
+                  requestAnimationFrame(() => avanzarAlSiguienteControl(event.currentTarget, target));
+                }
+              }
+            }
+          }}
+          className="space-y-6"
+        >
           
           <Card>
             <CardHeader>
@@ -315,37 +379,7 @@ export default function NuevaBitacora() {
             <CardHeader>
               <CardTitle>1. Registro de Aportes</CardTitle>
             </CardHeader>
-            {/* <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="cantidad_material"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cantidad Aprox. (Kg o L)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" placeholder="Ej. 2.5" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-
-
-              <FormField
-                control={form.control}
-                name="tipo_residuo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Residuos</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej. Restos de fruta, café, hojas secas..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-
+      
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               <div className="grid grid-cols-2 gap-4">
@@ -387,7 +421,7 @@ export default function NuevaBitacora() {
                   <FormItem>
                     <FormLabel>Tipo de Residuos</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Restos de fruta, café..." {...field} />
+                      <Input placeholder="Ej. Restos de fruta, café..." enterKeyHint="next" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -437,7 +471,7 @@ export default function NuevaBitacora() {
           {/* SECCIÓN 2: ESTADO FÍSICO */}
           <Card>
             <CardHeader>
-              <CardTitle>2. Estado Físico del Compost</CardTitle>
+              <CardTitle>2. Estado Físico de la Composta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-8">
               <FormField
@@ -635,36 +669,74 @@ export default function NuevaBitacora() {
                   {/* Subida de Imágenes */}
               <div className="space-y-3">
                 <FormLabel className="font-bold text-[#4A2E18]">Fotografías de Evidencia <span className="text-red-600">(Obligatorio)*</span></FormLabel>
-                <label className="relative block cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-white p-8 text-center transition hover:bg-gray-50">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/png, image/jpeg, image/jpg"
-                    onChange={handleImageChange}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                  <div className="pointer-events-none flex flex-col items-center justify-center">
-                    <UploadCloud className="mb-3 h-10 w-10 text-gray-400" />
-                    <p className="mb-1 text-sm text-gray-600">
-                      <span className="font-semibold text-green-600">Haz clic para subir</span> o arrastra y suelta
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG hasta 5MB</p>
-                  </div>
-                </label>
+                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-5">
+                      <div className="pointer-events-none mb-4 flex flex-col items-center justify-center text-center">
+                        <UploadCloud className="mb-2 h-9 w-9 text-gray-400" />
+                        <p className="text-sm text-gray-600">Agrega una o más fotografías de evidencia.</p>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <label className="flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-green-700">
+                          <Camera className="h-5 w-5" aria-hidden="true" />
+                          Capturar foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleImageChange}
+                            className="sr-only"
+                          />
+                        </label>
+                        <label className="flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-green-600 px-4 py-3 text-center text-sm font-bold text-green-700 transition hover:bg-green-50">
+                          <UploadCloud className="h-5 w-5" aria-hidden="true" />
+                          Adjuntar foto
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="sr-only"
+                          />
+                        </label>
+                      </div>
+                    </div>
 
                 {imagenes.length > 0 && (
                   <>
-                    <p className="text-sm font-medium text-green-600">
-                      {imagenes.length} archivo(s) seleccionado(s)
-                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-green-600">
+                        {imagenes.length} archivo(s) seleccionado(s)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagenes([]);
+                          setPreviewUrls((current) => {
+                            current.forEach((url) => URL.revokeObjectURL(url));
+                            return [];
+                          });
+                        }}
+                        className="text-xs font-semibold text-red-600 underline underline-offset-2"
+                      >
+                        Eliminar todo
+                      </button>
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-3">
                       {previewUrls.map((url, index) => (
-                        <img
-                          key={`${url}-${index}`}
-                          src={url}
-                          alt={`Vista previa ${index + 1}`}
-                          className="h-20 w-20 rounded-lg object-cover border border-gray-200 shadow-sm"
-                        />
+                        <div key={`${url}-${index}`} className="relative">
+                          <img
+                            src={url}
+                            alt={`Vista previa ${index + 1}`}
+                            className="h-20 w-20 rounded-lg object-cover border border-gray-200 shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow-md"
+                            aria-label={`Eliminar imagen ${index + 1}`}
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </>
